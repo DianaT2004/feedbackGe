@@ -47,7 +47,7 @@ app.get('/api/ai/status', (req, res) => {
   console.log('AI Status check requested');
   res.json({
     enabled: !!anthropic,
-    model: 'claude-3-sonnet-20240229',
+    model: 'claude-3-haiku-20240307',
     timestamp: new Date().toISOString()
   });
 });
@@ -85,7 +85,7 @@ app.post('/api/ai/generate-survey', async (req, res) => {
 
     console.log('Calling Claude API for survey generation...');
     const message = await anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
+      model: 'claude-3-haiku-20240307',
       max_tokens: 1000,
       messages: [{
         role: 'user',
@@ -177,7 +177,7 @@ app.post('/api/ai/analyze-survey', async (req, res) => {
 
     console.log('Calling Claude API for survey analysis...');
     const message = await anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
+      model: 'claude-3-haiku-20240307',
       max_tokens: 800,
       messages: [{
         role: 'user',
