@@ -8,75 +8,108 @@ function App() {
   const [currentView, setCurrentView] = useState('landing');
   const [userType, setUserType] = useState(null);
 
-  // Claude AI Integration
-  const [claudeApiKey, setClaudeApiKey] = useState('');
-  const [claudeClient, setClaudeClient] = useState(null);
+  // Claude AI Integration (Backend API)
+  const [aiEnabled, setAiEnabled] = useState(true); // Platform-level AI availability
 
-  // Initialize Claude client when API key is provided
-  useEffect(() => {
-    if (claudeApiKey && claudeApiKey.startsWith('sk-ant-')) {
-      try {
-        const client = new Anthropic({
-          apiKey: claudeApiKey,
-        });
-        setClaudeClient(client);
-        addNotification('Claude AI integration activated!', 'success');
-      } catch (error) {
-        console.error('Failed to initialize Claude client:', error);
-        addNotification('Failed to initialize Claude AI', 'error');
-      }
-    }
-  }, [claudeApiKey]);
-
-  // Claude AI Functions
+  // Backend API Functions for Claude AI
   const generateAISurvey = async (topic, targetAudience) => {
-    if (!claudeClient) {
-      addNotification('Claude API key required for AI features', 'warning');
+    if (!aiEnabled) {
+      addNotification('AI features are currently unavailable', 'warning');
       return null;
     }
 
     try {
-      const message = await claudeClient.messages.create({
-        model: 'claude-3-sonnet-20240229',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: `Generate a professional survey about "${topic}" for ${targetAudience} in Georgia. Include 5-7 relevant questions with appropriate question types (multiple choice, rating scale, open-ended). Format as JSON with title, description, and questions array.`
-        }]
+      const response = await fetch('/api/ai/generate-survey', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          topic,
+          targetAudience,
+          market: 'Georgia',
+          language: 'Georgian'
+        })
       });
 
-      const response = JSON.parse(message.content[0].text);
-      return response;
+      if (!response.ok) {
+        throw new Error('AI service unavailable');
+      }
+
+      const data = await response.json();
+      return data.survey;
     } catch (error) {
       console.error('AI Survey generation failed:', error);
-      addNotification('AI survey generation failed', 'error');
-      return null;
+      addNotification('AI survey generation temporarily unavailable', 'warning');
+      // Return fallback survey structure
+      return {
+        title: `${topic} Survey`,
+        description: `Please help us understand ${topic.toLowerCase()} by answering these questions.`,
+        questions: [
+          {
+            id: 1,
+            type: 'rating',
+            question: `How satisfied are you with ${topic.toLowerCase()}?`,
+            options: ['1-5 scale']
+          },
+          {
+            id: 2,
+            type: 'text',
+            question: 'What improvements would you suggest?',
+            options: []
+          }
+        ]
+      };
     }
   };
 
   const analyzeSurveyData = async (surveyData, responses) => {
-    if (!claudeClient) {
-      addNotification('Claude API key required for AI analysis', 'warning');
-      return null;
+    if (!aiEnabled) {
+      return 'AI analysis is currently unavailable. Please check back later.';
     }
 
     try {
-      const message = await claudeClient.messages.create({
-        model: 'claude-3-sonnet-20240229',
-        max_tokens: 800,
-        messages: [{
-          role: 'user',
-          content: `Analyze this survey data and provide 3 key insights. Survey: ${JSON.stringify(surveyData)}. Sample responses: ${JSON.stringify(responses.slice(0, 10))}. Provide actionable insights in Georgian market context.`
-        }]
+      const response = await fetch('/api/ai/analyze-survey', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          survey: surveyData,
+          responses: responses.slice(0, 50), // Limit for performance
+          market: 'Georgia'
+        })
       });
 
-      return message.content[0].text;
+      if (!response.ok) {
+        throw new Error('AI analysis service unavailable');
+      }
+
+      const data = await response.json();
+      return data.analysis || data.insights;
     } catch (error) {
       console.error('AI Analysis failed:', error);
-      addNotification('AI analysis failed', 'error');
-      return null;
+      return 'AI analysis is currently unavailable. Basic analytics are still available in the Analytics tab.';
     }
   };
+
+  const checkAIStatus = async () => {
+    try {
+      const response = await fetch('/api/ai/status');
+      const data = await response.json();
+      setAiEnabled(data.enabled);
+      return data.enabled;
+    } catch (error) {
+      console.warn('Could not check AI status:', error);
+      setAiEnabled(false);
+      return false;
+    }
+  };
+
+  // Check AI status on app load
+  useEffect(() => {
+    checkAIStatus();
+  }, []);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // UI state
@@ -2687,11 +2720,13 @@ function App() {
                   <h2 className="text-3xl font-bold text-white mb-2">AI Insights Dashboard</h2>
                   <p className="text-purple-300">Powered by Claude AI for intelligent analysis</p>
                 </div>
-                {!claudeClient && (
-                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-2">
-                    <p className="text-yellow-400 text-sm">Configure Claude API key in Surveys tab</p>
-                  </div>
-                )}
+                <div className={`px-4 py-2 rounded-xl text-sm font-medium ${
+                  aiEnabled
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                }`}>
+                  {aiEnabled ? 'AI Active' : 'AI Offline'}
+                </div>
               </div>
 
               {/* AI Insights Grid */}
@@ -2713,7 +2748,7 @@ function App() {
                       <div className="flex-1">
                         <h3 className="text-lg font-bold text-white mb-2">{insight.title}</h3>
                         <p className="text-purple-300 mb-4">{insight.content}</p>
-                        {claudeClient && (
+                        {aiEnabled && (
                           <button
                             onClick={async () => {
                               const analysis = await analyzeSurveyData(
@@ -2762,17 +2797,17 @@ function App() {
                   </div>
                 </div>
 
-                {!claudeClient && (
+                {!aiEnabled && (
                   <div className="mt-8 text-center">
                     <div className="bg-white/10 rounded-xl p-6 max-w-md mx-auto">
                       <Brain className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-                      <h4 className="text-lg font-bold text-white mb-2">Unlock AI Features</h4>
-                      <p className="text-purple-300 text-sm mb-4">Add your Claude API key to access AI-powered survey generation and intelligent analysis.</p>
+                      <h4 className="text-lg font-bold text-white mb-2">AI Features Temporarily Offline</h4>
+                      <p className="text-purple-300 text-sm mb-4">AI services are currently undergoing maintenance. Basic analytics remain available.</p>
                       <button
-                        onClick={() => setActiveTab('surveys')}
+                        onClick={() => checkAIStatus()}
                         className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:shadow-xl transition"
                       >
-                        Configure API Key
+                        Check Status
                       </button>
                     </div>
                   </div>
@@ -2803,25 +2838,27 @@ function App() {
                 <div className="flex gap-4">
                   <button
                     onClick={async () => {
-                      if (!claudeClient) {
-                        addNotification('Please configure your Claude API key first', 'warning');
+                      if (!aiEnabled) {
+                        addNotification('AI features are currently unavailable', 'warning');
                         return;
                       }
+                      setLoading('ai-survey', true);
                       const aiSurvey = await generateAISurvey('Customer Satisfaction', 'Georgian consumers');
+                      setLoading('ai-survey', false);
                       if (aiSurvey) {
                         addNotification('AI-generated survey created successfully!', 'success');
                         setActiveTab('create'); // Switch to create tab to show the generated survey
                       }
                     }}
-                    disabled={!claudeClient}
+                    disabled={!aiEnabled || loadingStates['ai-survey']}
                     className={`px-4 py-2 font-bold rounded-lg hover:shadow-lg transition flex items-center gap-2 ${
-                      claudeClient
+                      aiEnabled && !loadingStates['ai-survey']
                         ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:shadow-purple-500/25'
                         : 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
                     }`}
                   >
                     <Brain className="w-4 h-4" />
-                    {claudeClient ? 'AI Generate Survey' : 'AI Setup Required'}
+                    {loadingStates['ai-survey'] ? 'Generating...' : aiEnabled ? 'AI Generate Survey' : 'AI Offline'}
                   </button>
                   <button className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-lg hover:shadow-lg transition">
                     + Create Survey
@@ -2829,53 +2866,63 @@ function App() {
                 </div>
               </div>
 
-              {/* AI Configuration */}
+              {/* AI Features Status */}
               <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                   <Brain className="w-6 h-6 text-purple-400" />
-                  AI Configuration
+                  AI Features
                 </h3>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-purple-300 mb-2">Claude API Key</label>
-                    <div className="flex gap-3">
-                      <input
-                        type="password"
-                        value={claudeApiKey}
-                        onChange={(e) => setClaudeApiKey(e.target.value)}
-                        placeholder="sk-ant-api03-..."
-                        className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:border-purple-400 transition"
-                      />
-                      <button
-                        onClick={() => {
-                          if (claudeApiKey) {
-                            addNotification('API key saved securely', 'success');
-                          } else {
-                            addNotification('Please enter a valid API key', 'warning');
-                          }
-                        }}
-                        className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl hover:shadow-lg transition"
-                      >
-                        Save Key
-                      </button>
-                    </div>
-                    <p className="text-purple-400 text-sm mt-2">
-                      Get your API key from{' '}
-                      <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-purple-300">
-                        Anthropic Console
-                      </a>
-                    </p>
-                  </div>
-
-                  {claudeClient && (
+                  {aiEnabled ? (
                     <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
-                      <div className="flex items-center gap-2 text-green-400">
-                        <CheckCircle className="w-5 h-5" />
-                        <span className="font-medium">Claude AI is active and ready!</span>
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                        <div>
+                          <div className="flex items-center gap-2 text-green-400">
+                            <CheckCircle className="w-5 h-5" />
+                            <span className="font-medium">AI Features Active</span>
+                          </div>
+                          <p className="text-green-300 text-sm mt-1">Claude AI is ready to help with survey creation and analysis.</p>
+                        </div>
                       </div>
-                      <p className="text-green-300 text-sm mt-1">You can now use AI-powered survey generation and analysis features.</p>
+                    </div>
+                  ) : (
+                    <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                        <div>
+                          <div className="flex items-center gap-2 text-yellow-400">
+                            <AlertCircle className="w-5 h-5" />
+                            <span className="font-medium">AI Features Offline</span>
+                          </div>
+                          <p className="text-yellow-300 text-sm mt-1">AI services are temporarily unavailable. Basic features still work.</p>
+                        </div>
+                      </div>
                     </div>
                   )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/10">
+                    <div className="text-center p-4 bg-white/5 rounded-xl">
+                      <FileText className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+                      <h4 className="text-white font-medium mb-1">Survey Generation</h4>
+                      <p className="text-purple-300 text-sm">AI-powered survey creation</p>
+                      <div className={`mt-2 text-xs px-2 py-1 rounded-full ${
+                        aiEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-400'
+                      }`}>
+                        {aiEnabled ? 'Available' : 'Offline'}
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-white/5 rounded-xl">
+                      <BarChart3 className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
+                      <h4 className="text-white font-medium mb-1">Data Analysis</h4>
+                      <p className="text-purple-300 text-sm">Intelligent insights</p>
+                      <div className={`mt-2 text-xs px-2 py-1 rounded-full ${
+                        aiEnabled ? 'bg-cyan-500/20 text-cyan-400' : 'bg-gray-500/20 text-gray-400'
+                      }`}>
+                        {aiEnabled ? 'Available' : 'Offline'}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
