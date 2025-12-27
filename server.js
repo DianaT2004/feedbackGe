@@ -289,6 +289,60 @@ Format as JSON with insights[] and alerts[] arrays.`
   }
 });
 
+// Import Questions endpoint
+app.post('/api/ai/import-questions', async (req, res) => {
+  console.log('AI Import Questions requested');
+
+  if (!anthropic) {
+    return res.json({
+      questions: [],
+      message: 'AI features are currently unavailable'
+    });
+  }
+
+  try {
+    const { fileContent, fileType, surveyTopic } = req.body;
+
+    console.log('Processing file content for survey questions...');
+    const message = await anthropic.messages.create({
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 1000,
+      messages: [{
+        role: 'user',
+        content: `Analyze this document and extract/create survey questions for a survey about "${surveyTopic || 'general topic'}".
+Document content: ${fileContent.substring(0, 2000)}
+
+Please create 5-8 relevant survey questions based on the content. Format as JSON array with objects containing:
+- question: the question text
+- type: "multiple_choice", "rating", "text", or "yes_no"
+- options: array of options (for multiple choice) or ["1-5 scale"] for rating
+
+Focus on the key themes and information from the document.`
+      }]
+    });
+
+    const responseText = message.content[0].text;
+    try {
+      const questions = JSON.parse(responseText);
+      res.json({
+        questions: Array.isArray(questions) ? questions : [],
+        message: 'Questions generated successfully from document'
+      });
+    } catch (parseError) {
+      res.json({
+        questions: [],
+        message: 'Could not parse AI response, but processing completed'
+      });
+    }
+  } catch (error) {
+    console.error('AI Import Questions failed:', error);
+    res.status(500).json({
+      questions: [],
+      message: 'Failed to process document'
+    });
+  }
+});
+
 // AI Recommendations endpoint
 app.post('/api/ai/recommendations', async (req, res) => {
   console.log('AI Recommendations requested');

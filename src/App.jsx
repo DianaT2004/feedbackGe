@@ -12,6 +12,10 @@ function App() {
   const [aiEnabled, setAiEnabled] = useState(true); // Platform-level AI availability
   const [fullAIAnalysis, setFullAIAnalysis] = useState(null);
   const [showFullAnalysis, setShowFullAnalysis] = useState(false);
+  const [showSurveyDetails, setShowSurveyDetails] = useState(false);
+  const [selectedSurveyDetails, setSelectedSurveyDetails] = useState(null);
+  const [showSurveyChart, setShowSurveyChart] = useState(false);
+  const [tabsAnimated, setTabsAnimated] = useState(false); // Tab animation state
 
   // AI Capabilities & Features Configuration
   const aiCapabilities = {
@@ -239,7 +243,6 @@ function App() {
   const [notifications, setNotifications] = useState([]);
   const [loadingStates, setLoadingStates] = useState({});
   const [animations, setAnimations] = useState({});
-  const [theme, setTheme] = useState('dark');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Survey state
@@ -1016,10 +1019,12 @@ function App() {
         {/* Navigation */}
         <nav className="relative z-10 flex justify-between items-center p-6">
           <div className="flex items-center gap-3 group cursor-pointer" onClick={() => triggerAnimation('logo', 'animate-bounce')}>
-            <TokenLogo size={48} animated />
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <span className="text-white font-bold text-xl">Buo</span>
+            </div>
             <div>
-              <h1 className={`text-2xl font-bold text-white transition-all ${animations.logo ? 'animate-bounce' : ''}`}>FeedbackGe</h1>
-              <p className="text-xs text-purple-300">Research Platform</p>
+              <h1 className={`text-2xl font-bold text-white transition-all ${animations.logo ? 'animate-bounce' : ''}`}>Buo.ge</h1>
+              <p className="text-xs text-purple-300">Survey Intelligence Platform</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -1028,12 +1033,6 @@ function App() {
               className="px-6 py-2 text-white hover:bg-white/10 rounded-lg transition-all transform hover:scale-105"
             >
               ქართული
-            </button>
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 text-white hover:bg-white/10 rounded-lg transition-all transform hover:scale-110"
-            >
-              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -1136,7 +1135,7 @@ function App() {
         {/* Features Preview */}
         <div className="relative z-10 max-w-6xl mx-auto px-6 py-16">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">Why Choose FeedbackGe?</h2>
+            <h2 className="text-4xl font-bold text-white mb-4">Why Choose Buo.ge?</h2>
             <p className="text-purple-300 text-lg">Advanced features for modern research</p>
           </div>
 
@@ -1304,7 +1303,7 @@ function App() {
               <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
                 <CheckCircle className="w-12 h-12 text-white" />
               </div>
-              <h2 className="text-3xl font-bold text-white mb-2">Welcome to FeedbackGe!</h2>
+              <h2 className="text-3xl font-bold text-white mb-2">Welcome to Buo.ge!</h2>
               <p className="text-purple-300 mb-6">Your account has been created successfully</p>
               <div className="flex justify-center">
                 <LoadingSpinner size="lg" />
@@ -1359,7 +1358,7 @@ function App() {
             <p className="text-purple-300 text-center mb-8">
               {isLogin
                 ? (userType === 'user' ? 'Continue earning from research' : 'Access your research dashboard')
-                : 'Join the FeedbackGe community'
+                : 'Join the Buo.ge community'
               }
             </p>
 
@@ -1793,11 +1792,12 @@ function App() {
                         <span className="px-3 py-1 bg-white/20 rounded-full text-sm">+32%</span>
                       </div>
                     </div>
-                    <button
-                      onClick={async () => await simulateAction('withdraw')}
-                      disabled={loadingStates.withdraw}
-                      className="px-8 py-4 bg-white text-orange-600 font-bold text-lg rounded-2xl hover:shadow-2xl transition transform hover:scale-105 disabled:opacity-50 flex items-center gap-2"
-                    >
+                    {userProfile.balance * 0.05 >= 50 ? (
+                      <button
+                        onClick={async () => await simulateAction('withdraw')}
+                        disabled={loadingStates.withdraw}
+                        className="px-8 py-4 bg-white text-orange-600 font-bold text-lg rounded-2xl hover:shadow-2xl transition transform hover:scale-105 disabled:opacity-50 flex items-center gap-2"
+                      >
                       {loadingStates.withdraw ? <LoadingSpinner /> : (
                         <>
                           <Send className="w-5 h-5" />
@@ -1805,6 +1805,12 @@ function App() {
                         </>
                       )}
                     </button>
+                    ) : (
+                      <div className="px-8 py-4 bg-gray-500/20 text-gray-400 font-bold text-lg rounded-2xl flex items-center justify-center gap-2 cursor-not-allowed">
+                        <Send className="w-5 h-5" />
+                        Withdraw (Min ₾50)
+                      </div>
+                    )}
                   </div>
 
                   <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-5">
@@ -2074,12 +2080,21 @@ function App() {
   const CompanyDashboard = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [currentSurveyStep, setCurrentSurveyStep] = useState(1);
+    const [tabsAnimated, setTabsAnimated] = useState(false);
+
+    // Animate tabs on component mount
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        setTabsAnimated(true);
+      }, 300);
+      return () => clearTimeout(timer);
+    }, []);
     const [surveyData, setSurveyData] = useState({
       title: '',
       description: '',
       category: 'Food & Beverage',
       estimatedTime: 5,
-      reward: 0.50,
+      reward: 0.025,
       questions: [],
       targeting: {
         cities: ['Tbilisi'],
@@ -2106,10 +2121,10 @@ function App() {
     ];
 
     const recentSurveys = [
-      { name: 'Q4 Product Feedback Survey', status: 'active', responses: 847, created: '2024-01-15', reward: 0.50 },
-      { name: 'Customer Satisfaction Survey', status: 'completed', responses: 623, created: '2024-01-10', reward: 0.75 },
-      { name: 'Market Research Survey', status: 'active', responses: 234, created: '2024-01-08', reward: 0.30 },
-      { name: 'Employee Engagement Survey', status: 'draft', responses: 0, created: '2024-01-05', reward: 0.00 }
+      { name: 'Q4 Product Feedback Survey', status: 'active', responses: 847, created: '2024-01-15', reward: 0.035 },
+      { name: 'Customer Satisfaction Survey', status: 'completed', responses: 623, created: '2024-01-10', reward: 0.045 },
+      { name: 'Market Research Survey', status: 'active', responses: 234, created: '2024-01-08', reward: 0.025 },
+      { name: 'Employee Engagement Survey', status: 'draft', responses: 0, created: '2024-01-05', reward: 0.000 }
     ];
 
     const surveySteps = [
@@ -2228,7 +2243,13 @@ function App() {
               Quick Actions
             </h3>
             <div className="space-y-4">
-              <button className="w-full px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-xl hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+              <button
+                onClick={() => {
+                  setActiveTab('create');
+                  addNotification('Redirecting to survey creation wizard...', 'info');
+                }}
+                className="w-full px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-xl hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+              >
                 <Plus className="w-5 h-5" />
                 Create New Survey
               </button>
@@ -2242,9 +2263,33 @@ function App() {
                 <Brain className="w-5 h-5" />
                 AI Survey Builder
               </button>
-              <button className="w-full px-6 py-4 bg-white/10 backdrop-blur-md text-white border-2 border-white/20 rounded-xl hover:bg-white/20 transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+              <button
+                onClick={() => {
+                  // Create file input for document upload
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = '.pdf,.txt,.doc,.docx,.jpg,.jpeg,.png';
+                  input.multiple = true;
+                  input.onchange = async (e) => {
+                    const files = Array.from(e.target.files);
+                    if (files.length === 0) return;
+
+                    addNotification(`Processing ${files.length} file(s)...`, 'info');
+
+                    // Here you would upload files to your backend
+                    // For now, simulate processing
+                    setTimeout(() => {
+                      addNotification('Files processed! AI is generating survey questions...', 'success');
+                      setActiveTab('create');
+                    }, 2000);
+                  };
+                  input.click();
+                }}
+                className="w-full px-6 py-4 bg-white/10 backdrop-blur-md text-white border-2 border-white/20 rounded-xl hover:bg-white/20 transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+              >
                 <Upload className="w-5 h-5" />
                 Import Questions
+                <span className="text-xs opacity-75">(PDF, TXT, IMG)</span>
               </button>
             </div>
           </div>
@@ -2788,19 +2833,26 @@ function App() {
                 <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
                   <Building2 className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-xl font-bold text-white">🏢 COMPANY DASHBOARD</span>
+                <span className="text-xl font-bold text-white bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">COMPANY DASHBOARD</span>
               </div>
               <div className="h-6 w-px bg-white/20"></div>
               <div className="flex gap-6">
-                {navigationTabs.map(tab => (
+                {navigationTabs.map((tab, index) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all transform ${
+                      tabsAnimated
+                        ? 'translate-y-0 opacity-100'
+                        : 'translate-y-4 opacity-0'
+                    } ${
                       activeTab === tab.id
                         ? 'bg-white/20 text-white'
                         : 'text-purple-300 hover:text-white hover:bg-white/10'
                     }`}
+                    style={{
+                      transitionDelay: tabsAnimated ? `${index * 100}ms` : '0ms'
+                    }}
                   >
                     <tab.icon className="w-4 h-4" />
                     {tab.label}
@@ -3408,37 +3460,20 @@ function App() {
 
                     <div className="flex justify-between items-center text-sm text-purple-300 mb-4">
                       <span>Created {survey.created}</span>
-                      <span>{survey.reward} tokens each</span>
+                      <span>{survey.reward} tokens (≈ ₾{(survey.reward * 0.05).toFixed(4)})</span>
                     </div>
 
                     {/* Survey Management Actions */}
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => {
-                          setSelectedSurvey(survey);
-                          addNotification(`Viewing survey: ${survey.name}`, 'info');
+                          setSelectedSurveyDetails(survey);
+                          setShowSurveyDetails(true);
+                          addNotification(`Viewing detailed data for: ${survey.name}`, 'info');
                         }}
                         className="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-lg text-xs hover:bg-indigo-500/30 transition"
                       >
                         👁️ View
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (survey.status === 'draft' || survey.status === 'active') {
-                            setActiveTab('create');
-                            addNotification(`Editing survey: ${survey.name}`, 'info');
-                          } else {
-                            addNotification('Completed surveys cannot be edited', 'warning');
-                          }
-                        }}
-                        disabled={survey.status === 'completed'}
-                        className={`px-3 py-1 rounded-lg text-xs transition ${
-                          survey.status === 'completed'
-                            ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
-                            : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
-                        }`}
-                      >
-                        ✏️ Edit
                       </button>
                       <button
                         onClick={() => {
@@ -3451,12 +3486,13 @@ function App() {
                       </button>
                       <button
                         onClick={() => {
-                          setActiveTab('analytics');
-                          addNotification(`Viewing analytics for: ${survey.name}`, 'info');
+                          setSelectedSurveyDetails(survey);
+                          setShowSurveyChart(true);
+                          addNotification(`Viewing chart for: ${survey.name}`, 'info');
                         }}
                         className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-lg text-xs hover:bg-purple-500/30 transition"
                       >
-                        📊 Analytics
+                        📊 Chart
                       </button>
                       {aiEnabled && (
                         <button
@@ -3482,10 +3518,246 @@ function App() {
     );
   };
 
+  // Survey Details Modal
+  const renderSurveyDetailsModal = () => {
+    if (!showSurveyDetails || !selectedSurveyDetails) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-8">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-white mb-2">{selectedSurveyDetails.name}</h2>
+                <p className="text-purple-300">Detailed Survey Information</p>
+              </div>
+              <button
+                onClick={() => setShowSurveyDetails(false)}
+                className="p-2 text-purple-300 hover:text-white transition"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Survey Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <FileText className="w-6 h-6 text-blue-400" />
+                  Survey Overview
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-purple-300">Status:</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      selectedSurveyDetails.status === 'active' ? 'bg-green-500/20 text-green-400' :
+                      selectedSurveyDetails.status === 'completed' ? 'bg-blue-500/20 text-blue-400' :
+                      'bg-gray-500/20 text-gray-400'
+                    }`}>
+                      {selectedSurveyDetails.status}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-purple-300">Responses:</span>
+                    <span className="text-white font-medium">{selectedSurveyDetails.responses}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-purple-300">Reward:</span>
+                    <span className="text-emerald-400 font-medium">{selectedSurveyDetails.reward} tokens</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-purple-300">Created:</span>
+                    <span className="text-white">{selectedSurveyDetails.created}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <Target className="w-6 h-6 text-purple-400" />
+                  Targeting Details
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-purple-300">Cities:</span>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {selectedSurveyDetails.targeting?.cities?.map((city, i) => (
+                        <span key={i} className="px-2 py-1 bg-indigo-500/20 text-indigo-400 rounded text-xs">
+                          {city}
+                        </span>
+                      )) || <span className="text-gray-400">All cities</span>}
+                    </div>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-purple-300">Age Range:</span>
+                    <span className="text-white">
+                      {selectedSurveyDetails.targeting?.ageRange?.min || 18} - {selectedSurveyDetails.targeting?.ageRange?.max || 65}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-purple-300">Interests:</span>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {selectedSurveyDetails.targeting?.interests?.map((interest, i) => (
+                        <span key={i} className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">
+                          {interest}
+                        </span>
+                      )) || <span className="text-gray-400">All interests</span>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Questions Preview */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <List className="w-6 h-6 text-emerald-400" />
+                Survey Questions ({selectedSurveyDetails.questions?.length || 0})
+              </h3>
+              <div className="space-y-4">
+                {selectedSurveyDetails.questions?.map((question, i) => (
+                  <div key={i} className="bg-white/5 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-emerald-400 font-bold text-sm">{i + 1}</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-white font-medium mb-2">{question.question}</p>
+                        <div className="flex items-center gap-4 text-sm">
+                          <span className="text-purple-300">Type: <span className="text-indigo-400">{question.type}</span></span>
+                          <span className="text-purple-300">Required: <span className="text-emerald-400">Yes</span></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )) || (
+                  <div className="text-center py-8">
+                    <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-400">No questions configured yet</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Survey Chart Modal
+  const renderSurveyChartModal = () => {
+    if (!showSurveyChart || !selectedSurveyDetails) return null;
+
+    // Sample chart data - in real app this would come from analytics
+    const chartData = [
+      { name: 'Week 1', responses: 12, satisfaction: 4.2 },
+      { name: 'Week 2', responses: 28, satisfaction: 4.1 },
+      { name: 'Week 3', responses: 45, satisfaction: 4.3 },
+      { name: 'Week 4', responses: 67, satisfaction: 4.4 },
+    ];
+
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-8">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-white mb-2">Survey Analytics: {selectedSurveyDetails.name}</h2>
+                <p className="text-purple-300">Response trends and performance metrics</p>
+              </div>
+              <button
+                onClick={() => setShowSurveyChart(false)}
+                className="p-2 text-purple-300 hover:text-white transition"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                <h3 className="text-xl font-bold text-white mb-4">Response Growth</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="name" stroke="#9CA3AF" />
+                    <YAxis stroke="#9CA3AF" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1F2937',
+                        border: '1px solid #374151',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="responses"
+                      stroke="#8B5CF6"
+                      strokeWidth={3}
+                      dot={{ fill: '#8B5CF6', strokeWidth: 2, r: 4 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                <h3 className="text-xl font-bold text-white mb-4">Satisfaction Trend</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="name" stroke="#9CA3AF" />
+                    <YAxis stroke="#9CA3AF" domain={[0, 5]} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1F2937',
+                        border: '1px solid #374151',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="satisfaction"
+                      stroke="#10B981"
+                      fill="#10B981"
+                      fillOpacity={0.3}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Key Metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 text-center">
+                <div className="text-2xl font-bold text-blue-400 mb-1">{selectedSurveyDetails.responses}</div>
+                <div className="text-purple-300 text-sm">Total Responses</div>
+              </div>
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 text-center">
+                <div className="text-2xl font-bold text-emerald-400 mb-1">4.3</div>
+                <div className="text-purple-300 text-sm">Avg Rating</div>
+              </div>
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 text-center">
+                <div className="text-2xl font-bold text-purple-400 mb-1">73%</div>
+                <div className="text-purple-300 text-sm">Completion Rate</div>
+              </div>
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 text-center">
+                <div className="text-2xl font-bold text-orange-400 mb-1">₾{selectedSurveyDetails.responses * selectedSurveyDetails.reward * 0.05}</div>
+                <div className="text-purple-300 text-sm">Revenue Generated</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Main render logic with Notification System
   return (
     <>
       <NotificationSystem />
+      {renderFullAIAnalysis()}
+      {renderSurveyDetailsModal()}
+      {renderSurveyChartModal()}
       {selectedSurvey ? (
         <SurveyInterface />
       ) : (
