@@ -1715,7 +1715,7 @@ function App() {
                 {[
                   { id: 'overview', label: 'Dashboard', icon: Home },
                   { id: 'surveys', label: 'Surveys', icon: Target },
-                  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+                  { id: 'companies', label: 'Companies', icon: Building2 },
                   { id: 'achievements', label: 'Achievements', icon: Trophy }
                 ].map(tab => (
                   <button
@@ -2116,6 +2116,7 @@ function App() {
       { id: 'create', label: 'Create Survey', icon: Plus },
       { id: 'analytics', label: 'Analytics', icon: BarChart3 },
       { id: 'insights', label: 'AI Insights', icon: Brain },
+      { id: 'vouchers', label: 'Vouchers', icon: Gift },
       { id: 'team', label: 'Team', icon: Users },
       { id: 'billing', label: 'Billing', icon: CreditCard }
     ];
@@ -3036,6 +3037,113 @@ function App() {
           {activeTab === 'dashboard' && renderDashboardOverview()}
           {activeTab === 'create' && renderSurveyCreation()}
           {activeTab === 'analytics' && renderAnalytics()}
+          {activeTab === 'vouchers' && (
+            <div className="space-y-8">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-3xl font-bold text-white mb-2">Voucher Management</h2>
+                  <p className="text-purple-300">Create and manage promotional vouchers for your customers</p>
+                </div>
+                <button className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-xl hover:shadow-xl transition transform hover:scale-105 flex items-center gap-2">
+                  <Gift className="w-5 h-5" />
+                  Create Voucher
+                </button>
+              </div>
+
+              {/* Voucher Creation Form */}
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                <h3 className="text-xl font-bold text-white mb-6">Create New Voucher</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-white font-medium mb-2">Voucher Title</label>
+                    <input
+                      type="text"
+                      placeholder="e.g., 20% Off at Tbilisi Mall"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:border-purple-400 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white font-medium mb-2">Discount Type</label>
+                    <select className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-purple-400 transition">
+                      <option>Percentage Discount</option>
+                      <option>Fixed Amount</option>
+                      <option>Free Item</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-white font-medium mb-2">Discount Value</label>
+                    <input
+                      type="number"
+                      placeholder="20"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:border-purple-400 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white font-medium mb-2">Expiry Date</label>
+                    <input
+                      type="date"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-purple-400 transition"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-white font-medium mb-2">Description</label>
+                    <textarea
+                      placeholder="Describe the voucher offer and terms..."
+                      rows="4"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:border-purple-400 transition resize-none"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-4 mt-6">
+                  <button className="px-6 py-3 bg-gray-500/20 text-gray-400 rounded-xl hover:bg-gray-500/30 transition">
+                    Cancel
+                  </button>
+                  <button className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl hover:shadow-lg transition transform hover:scale-105">
+                    Create Voucher
+                  </button>
+                </div>
+              </div>
+
+              {/* Existing Vouchers */}
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                <h3 className="text-xl font-bold text-white mb-6">Your Vouchers</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[
+                    { title: '20% Off Fashion', discount: '20%', status: 'active', uses: 45, expiry: '2025-01-15' },
+                    { title: 'Free Coffee', discount: 'Free Item', status: 'active', uses: 23, expiry: '2025-02-01' },
+                    { title: '₾10 Off Food', discount: '₾10', status: 'expired', uses: 89, expiry: '2024-12-01' }
+                  ].map((voucher, i) => (
+                    <div key={i} className="bg-gradient-to-br from-pink-500/10 to-rose-500/10 backdrop-blur-xl border border-pink-500/20 rounded-2xl p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h4 className="text-white font-bold mb-1">{voucher.title}</h4>
+                          <span className="text-pink-400 font-medium">{voucher.discount}</span>
+                        </div>
+                        <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          voucher.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
+                        }`}>
+                          {voucher.status}
+                        </div>
+                      </div>
+                      <div className="space-y-2 text-sm text-purple-300">
+                        <div>Uses: {voucher.uses}</div>
+                        <div>Expires: {voucher.expiry}</div>
+                      </div>
+                      <div className="flex gap-2 mt-4">
+                        <button className="flex-1 px-3 py-2 bg-pink-500/20 text-pink-400 rounded-lg hover:bg-pink-500/30 transition text-xs">
+                          Edit
+                        </button>
+                        <button className="flex-1 px-3 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition text-xs">
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'insights' && !showFullAnalysis && (
             <div className="space-y-8">
               <div className="flex justify-between items-center">
