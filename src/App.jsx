@@ -1336,92 +1336,147 @@ function App() {
 
       <div className="relative z-10 w-full max-w-4xl">
         <button
-          onClick={() => setCurrentView('userDash')}
+          onClick={() => setCurrentView('companyDash')}
           className="mb-6 text-purple-300 hover:text-white transition flex items-center gap-2"
         >
           ← Back to Dashboard
         </button>
 
         <div className="text-center mb-8">
-          <Crown className="w-16 h-16 text-yellow-400 mx-auto mb-4 animate-bounce" />
-          <h1 className="text-4xl font-bold text-white mb-4">Upgrade to Premium</h1>
-          <p className="text-purple-300 text-lg">Unlock advanced features and earn more</p>
+          <Crown className="w-20 h-20 text-yellow-400 mx-auto mb-6 animate-pulse" />
+          <h1 className="text-5xl font-bold text-white mb-4">Choose Your Plan</h1>
+          <p className="text-xl text-purple-300 mb-6">Unlock premium research tools and advanced analytics</p>
+          <div className="flex justify-center gap-6 text-sm">
+            <span className="flex items-center gap-2 text-green-400">
+              <CheckCircle className="w-4 h-4" />
+              14-day free trial
+            </span>
+            <span className="flex items-center gap-2 text-blue-400">
+              <Shield className="w-4 h-4" />
+              Cancel anytime
+            </span>
+            <span className="flex items-center gap-2 text-purple-400">
+              <Zap className="w-4 h-4" />
+              Instant activation
+            </span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {[
+            {
+              name: 'Free',
+              price: '₾0',
+              period: 'forever',
+              description: 'Perfect for getting started',
+              features: ['3 surveys/month', 'Basic analytics', 'Standard support'],
+              limitations: ['Limited to 100 responses', 'Basic question types', 'No AI features'],
+              color: 'from-gray-500 to-gray-600',
+              buttonText: 'Current Plan',
+              buttonStyle: 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
+            },
             {
               name: 'Pro',
               price: '₾9.99',
               period: 'month',
-              features: ['Advanced Analytics', 'Priority Support', 'Custom Branding', 'API Access'],
+              description: 'For growing research teams',
+              features: ['Unlimited surveys', 'Advanced analytics', 'Priority support', 'Custom branding', 'API access'],
+              limitations: [],
               color: 'from-purple-500 to-pink-500',
-              popular: false
+              buttonText: 'Upgrade to Pro',
+              buttonStyle: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:shadow-xl'
             },
             {
               name: 'Premium',
               price: '₾19.99',
               period: 'month',
-              features: ['All Pro Features', 'AI Insights', 'White-label Solution', 'Dedicated Manager'],
+              description: 'Full research suite with AI',
+              features: ['Everything in Pro', 'AI survey creation', 'Advanced AI insights', 'White-label solution', 'Dedicated manager'],
+              limitations: [],
               color: 'from-yellow-500 to-orange-500',
+              buttonText: 'Upgrade to Premium',
+              buttonStyle: 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white hover:shadow-xl hover:shadow-orange-500/50',
               popular: true
             },
             {
               name: 'Enterprise',
               price: '₾49.99',
               period: 'month',
-              features: ['All Premium Features', 'Custom Integrations', 'Advanced Security', '24/7 Support'],
+              description: 'Custom solutions for large organizations',
+              features: ['Everything in Premium', 'Custom integrations', 'Advanced security', '24/7 support'],
+              limitations: [],
               color: 'from-indigo-500 to-purple-500',
-              popular: false
+              buttonText: 'Contact Sales',
+              buttonStyle: 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:shadow-xl'
             }
           ].map((plan, i) => (
             <div
               key={i}
               className={`relative bg-white/5 backdrop-blur-xl border rounded-2xl p-6 transition-all transform hover:scale-105 hover:shadow-2xl ${
                 plan.popular
-                  ? 'border-yellow-500/50 bg-gradient-to-br from-yellow-500/10 to-orange-500/10'
+                  ? 'border-yellow-500/50 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 shadow-xl shadow-yellow-500/20'
                   : 'border-white/10 hover:border-white/20'
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <PremiumBadge type="premium" size="sm" />
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-1 rounded-full text-sm font-bold shadow-lg">
+                    MOST POPULAR
+                  </div>
                 </div>
               )}
 
               <div className="text-center mb-6">
                 <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+                <p className="text-purple-300 text-sm mb-4">{plan.description}</p>
                 <div className="text-4xl font-bold text-white mb-1">{plan.price}</div>
-                <div className="text-purple-300">per {plan.period}</div>
+                <div className="text-purple-300 text-sm">per {plan.period}</div>
               </div>
 
-              <ul className="space-y-3 mb-6">
-                {plan.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-3 text-purple-200">
-                    <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
+              <div className="mb-6">
+                <h4 className="text-white font-medium mb-3">Features:</h4>
+                <ul className="space-y-2 mb-4">
+                  {plan.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-center gap-3 text-purple-200 text-sm">
+                      <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                {plan.limitations && plan.limitations.length > 0 && (
+                  <div>
+                    <h4 className="text-red-400 font-medium mb-2">Limitations:</h4>
+                    <ul className="space-y-1">
+                      {plan.limitations.map((limitation, idx) => (
+                        <li key={idx} className="flex items-center gap-3 text-red-300 text-sm">
+                          <X className="w-3 h-3 flex-shrink-0" />
+                          <span>{limitation}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
 
               <button
                 onClick={async () => {
-                  setLoading(`upgrade-${plan.name}`, true);
-                  await simulateAction('upgrade');
-                  setLoading(`upgrade-${plan.name}`, false);
+                  if (plan.name === 'Enterprise') {
+                    addNotification('Redirecting to sales team...', 'info');
+                    return;
+                  }
+                  if (plan.name !== 'Free') {
+                    setLoading(`upgrade-${plan.name}`, true);
+                    await simulateAction('upgrade');
+                    setLoading(`upgrade-${plan.name}`, false);
+                    addNotification(`Successfully upgraded to ${plan.name}!`, 'success');
+                  }
                 }}
-                disabled={loadingStates[`upgrade-${plan.name}`]}
-                className={`w-full py-3 rounded-xl font-bold transition-all transform ${
-                  plan.popular
-                    ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white hover:shadow-xl hover:shadow-orange-500/50'
-                    : 'bg-white/10 text-white hover:bg-white/20'
-                } ${loadingStates[`upgrade-${plan.name}`] ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
+                disabled={loadingStates[`upgrade-${plan.name}`] || plan.name === 'Free'}
+                className={`w-full py-3 rounded-xl font-bold transition-all transform ${plan.buttonStyle} ${
+                  loadingStates[`upgrade-${plan.name}`] ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                }`}
               >
-                {loadingStates[`upgrade-${plan.name}`] ? (
-                  <LoadingSpinner />
-                ) : (
-                  `Upgrade to ${plan.name}`
-                )}
+                {loadingStates[`upgrade-${plan.name}`] ? 'Processing...' : plan.buttonText}
               </button>
             </div>
           ))}
@@ -2399,50 +2454,63 @@ function App() {
               </ResponsiveContainer>
             </div>
 
-            {/* Question Breakdown */}
+            {/* Question Breakdown - Bar Chart */}
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-              <h3 className="text-xl font-bold text-white mb-6">Question Breakdown</h3>
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-white font-medium mb-4">Q1: How satisfied are you with our service?</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-purple-300 text-sm">5 Stars</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-32 h-2 bg-white/10 rounded-full overflow-hidden">
-                          <div className="w-3/4 h-full bg-yellow-400 rounded-full"></div>
-                        </div>
-                        <span className="text-white text-sm w-12 text-right">45% (381)</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-purple-300 text-sm">4 Stars</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-32 h-2 bg-white/10 rounded-full overflow-hidden">
-                          <div className="w-1/2 h-full bg-yellow-400 rounded-full"></div>
-                        </div>
-                        <span className="text-white text-sm w-12 text-right">28% (237)</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-purple-300 text-sm">3 Stars</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-32 h-2 bg-white/10 rounded-full overflow-hidden">
-                          <div className="w-1/4 h-full bg-yellow-400 rounded-full"></div>
-                        </div>
-                        <span className="text-white text-sm w-12 text-right">15% (127)</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-3 mt-4">
-                    <button className="px-4 py-2 bg-indigo-500/20 text-indigo-400 rounded-lg hover:bg-indigo-500/30 transition text-sm font-medium">
-                      View Detailed Analysis
-                    </button>
-                    <button className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition text-sm">
-                      Filter by Demographics
-                    </button>
-                  </div>
+              <h3 className="text-xl font-bold text-white mb-6">Question Response Distribution</h3>
+              <div className="mb-6">
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={[
+                    { rating: '5 Stars', count: 381, percentage: 45 },
+                    { rating: '4 Stars', count: 237, percentage: 28 },
+                    { rating: '3 Stars', count: 127, percentage: 15 },
+                    { rating: '2 Stars', count: 68, percentage: 8 },
+                    { rating: '1 Star', count: 34, percentage: 4 }
+                  ]}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
+                    <XAxis dataKey="rating" stroke="#ffffff60" />
+                    <YAxis stroke="#ffffff60" />
+                    <Tooltip
+                      contentStyle={{
+                        background: '#1e293b',
+                        border: '1px solid #ffffff20',
+                        borderRadius: '12px',
+                        color: '#ffffff'
+                      }}
+                      formatter={(value, name) => [
+                        name === 'count' ? `${value} responses` : `${value}%`,
+                        name === 'count' ? 'Responses' : 'Percentage'
+                      ]}
+                    />
+                    <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Basic Analysis Text */}
+              <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-xl p-4">
+                <h4 className="text-white font-bold mb-3 flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-blue-400" />
+                  Basic Analysis
+                </h4>
+                <div className="space-y-2 text-sm text-purple-200">
+                  <p>• <strong>45% of respondents</strong> gave 5-star ratings, indicating strong satisfaction</p>
+                  <p>• <strong>73% of responses</strong> are 4-star or 5-star, showing positive overall sentiment</p>
+                  <p>• <strong>12% of respondents</strong> gave low ratings (1-2 stars), suggesting areas for improvement</p>
+                  <p>• <strong>Average rating: 4.2/5</strong> - Above industry average for similar services</p>
+                  <p>• <strong>Response distribution</strong> shows a healthy bell curve with positive skew</p>
                 </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button className="px-4 py-2 bg-indigo-500/20 text-indigo-400 rounded-lg hover:bg-indigo-500/30 transition text-sm font-medium">
+                  View Detailed Analysis
+                </button>
+                <button className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition text-sm">
+                  Filter by Demographics
+                </button>
+                <button className="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition text-sm">
+                  Export Report
+                </button>
               </div>
             </div>
           </div>
@@ -2548,9 +2616,12 @@ function App() {
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+              <button
+                onClick={() => setCurrentView('upgrade')}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-medium hover:scale-105 transition cursor-pointer"
+              >
                 Pro Plan
-              </div>
+              </button>
               <button
                 onClick={() => addNotification('Notifications panel coming soon!', 'info')}
                 className="p-2 text-white hover:bg-white/10 rounded-lg transition relative"
