@@ -19,7 +19,8 @@ function App() {
     }
 
     try {
-      const response = await fetch('/api/ai/generate-survey', {
+      console.log('Generating AI survey...', { topic, targetAudience });
+      const response = await fetch('http://localhost:3001/api/ai/generate-survey', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -32,11 +33,15 @@ function App() {
         })
       });
 
+      console.log('AI survey response status:', response.status);
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('AI survey response error:', errorText);
         throw new Error('AI service unavailable');
       }
 
       const data = await response.json();
+      console.log('AI survey data received:', data);
       return data.survey;
     } catch (error) {
       console.error('AI Survey generation failed:', error);
@@ -69,7 +74,8 @@ function App() {
     }
 
     try {
-      const response = await fetch('/api/ai/analyze-survey', {
+      console.log('Analyzing survey data with AI...');
+      const response = await fetch('http://localhost:3001/api/ai/analyze-survey', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,11 +87,15 @@ function App() {
         })
       });
 
+      console.log('AI analysis response status:', response.status);
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('AI analysis response error:', errorText);
         throw new Error('AI analysis service unavailable');
       }
 
       const data = await response.json();
+      console.log('AI analysis data received:', data);
       return data.analysis || data.insights;
     } catch (error) {
       console.error('AI Analysis failed:', error);
@@ -95,8 +105,11 @@ function App() {
 
   const checkAIStatus = async () => {
     try {
-      const response = await fetch('/api/ai/status');
+      console.log('Checking AI status...');
+      const response = await fetch('http://localhost:3001/api/ai/status');
+      console.log('AI status response:', response.status);
       const data = await response.json();
+      console.log('AI status data:', data);
       setAiEnabled(data.enabled);
       return data.enabled;
     } catch (error) {
