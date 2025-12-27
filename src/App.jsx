@@ -16,7 +16,12 @@ function App() {
   const [selectedSurveyDetails, setSelectedSurveyDetails] = useState(null);
   const [showSurveyChart, setShowSurveyChart] = useState(false);
   const [tabsAnimated, setTabsAnimated] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false); // Tab animation state
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Animation states
+  const [loginAnimated, setLoginAnimated] = useState(false);
+  const [dashboardLoaded, setDashboardLoaded] = useState(false);
+  const [modalAnimated, setModalAnimated] = useState(false);
 
   // AI Capabilities & Features Configuration
   const aiCapabilities = {
@@ -1245,11 +1250,19 @@ function App() {
       setLoading('auth', false);
       setIsLoggedIn(true);
 
+      // Trigger login animation
+      setLoginAnimated(true);
+
       const targetView = userType === 'user' ? 'userDash' : 'companyDash';
       console.log('Navigating to:', targetView, 'for userType:', userType);
 
       addNotification(`Welcome to ${userType === 'user' ? 'User' : 'Company'} Dashboard!`, 'success');
-      setCurrentView(targetView);
+
+      // Delay navigation for animation
+      setTimeout(() => {
+        setCurrentView(targetView);
+        setLoginAnimated(false);
+      }, 800);
     };
 
     const handleRegister = async () => {
@@ -1680,9 +1693,20 @@ function App() {
   // Enhanced User Dashboard Component
   const UserDashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
+    const [dashboardAnimated, setDashboardAnimated] = useState(false);
+
+    // Animate dashboard on load
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        setDashboardAnimated(true);
+      }, 200);
+      return () => clearTimeout(timer);
+    }, []);
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 relative">
+      <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 relative transition-all duration-1000 ${
+        dashboardAnimated ? 'opacity-100' : 'opacity-0'
+      }`}>
         {/* Background Effects */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           {particles.map(p => (
@@ -1781,10 +1805,10 @@ function App() {
                 <div className="relative z-10">
                   <div className="flex justify-between items-start mb-6">
                     <div>
-                      <p className="text-white/80 mb-2 flex items-center gap-2">
+                      <div className="text-white/80 mb-2 flex items-center gap-2">
                         <TokenLogo size={20} />
                         Your Total Balance
-                      </p>
+                      </div>
                       <h2 className="text-6xl font-bold text-white mb-2">{Math.round(userProfile.balance / 0.05)} tokens</h2>
                       <p className="text-purple-300 text-lg">≈ ₾{userProfile.balance.toFixed(2)} Lari</p>
                       <div className="flex items-center gap-3 text-white/90">
@@ -2010,6 +2034,145 @@ function App() {
             </div>
           )}
 
+          {activeTab === 'companies' && (
+            <div className="space-y-8">
+              <div className="text-center mb-8">
+                <Building2 className="w-16 h-16 text-purple-400 mx-auto mb-4 animate-bounce" />
+                <h2 className="text-3xl font-bold text-white mb-4 animate-in slide-in-from-bottom duration-700">Discover Companies</h2>
+                <p className="text-purple-300 animate-in slide-in-from-bottom duration-700 delay-200">Subscribe to companies to get exclusive surveys and earn more rewards</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[
+                  {
+                    name: 'TBC Bank',
+                    logo: '🏦',
+                    description: 'Georgia\'s leading bank offering financial surveys',
+                    surveys: 12,
+                    subscribers: '2.1K',
+                    rating: 4.8,
+                    category: 'Finance',
+                    subscribed: true
+                  },
+                  {
+                    name: 'Tbilisi Mall',
+                    logo: '🏬',
+                    description: 'Retail and shopping experience surveys',
+                    surveys: 8,
+                    subscribers: '1.8K',
+                    rating: 4.6,
+                    category: 'Retail',
+                    subscribed: false
+                  },
+                  {
+                    name: 'Georgian Airways',
+                    logo: '✈️',
+                    description: 'Travel and aviation experience feedback',
+                    surveys: 6,
+                    subscribers: '956',
+                    rating: 4.7,
+                    category: 'Travel',
+                    subscribed: true
+                  }
+                ].map((company, i) => (
+                  <div
+                    key={i}
+                    className={`bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all transform hover:scale-105 animate-in fade-in duration-500`}
+                    style={{ animationDelay: `${i * 200}ms` }}
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center text-2xl animate-pulse">
+                          {company.logo}
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-white">{company.name}</h3>
+                          <p className="text-purple-300 text-sm">{company.category}</p>
+                        </div>
+                      </div>
+                      {company.subscribed && (
+                        <div className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-medium animate-in zoom-in duration-300">
+                          Subscribed
+                        </div>
+                      )}
+                    </div>
+
+                    <p className="text-purple-300 text-sm mb-4">{company.description}</p>
+
+                    <div className="grid grid-cols-3 gap-4 mb-4">
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-blue-400">{company.surveys}</div>
+                        <div className="text-xs text-purple-300">Surveys</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-purple-400">{company.subscribers}</div>
+                        <div className="text-xs text-purple-300">Subs</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-yellow-400">{company.rating}</div>
+                        <div className="text-xs text-purple-300">Rating</div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        if (company.subscribed) {
+                          addNotification(`Unsubscribed from ${company.name}`, 'info');
+                        } else {
+                          addNotification(`Subscribed to ${company.name}! You'll now receive their exclusive surveys.`, 'success');
+                        }
+                      }}
+                      className={`w-full px-4 py-2 rounded-lg font-medium transition transform hover:scale-105 animate-in slide-in-from-bottom duration-500 ${
+                        company.subscribed
+                          ? 'bg-gray-500/20 text-gray-400 hover:bg-gray-500/30'
+                          : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:shadow-lg'
+                      }`}
+                      style={{ animationDelay: `${i * 200 + 400}ms` }}
+                    >
+                      {company.subscribed ? 'Unsubscribe' : 'Subscribe'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* AI Recommendations */}
+              <div className="bg-gradient-to-br from-indigo-500/20 to-purple-500/20 backdrop-blur-xl border border-indigo-500/30 rounded-2xl p-6 animate-in slide-in-from-bottom duration-700 delay-500">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <Brain className="w-6 h-6 text-indigo-400" />
+                  AI Recommendations
+                </h3>
+                <p className="text-purple-300 mb-4">
+                  Based on your survey preferences and completion history, AI suggests these companies for you:
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl animate-in slide-in-from-left duration-500 delay-700">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">🏦</span>
+                      <div>
+                        <div className="text-white font-medium">TBC Bank</div>
+                        <div className="text-purple-300 text-sm">High match - Finance surveys</div>
+                      </div>
+                    </div>
+                    <button className="px-4 py-2 bg-indigo-500/20 text-indigo-400 rounded-lg hover:bg-indigo-500/30 transition">
+                      Subscribe
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl animate-in slide-in-from-left duration-500 delay-900">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">☕</span>
+                      <div>
+                        <div className="text-white font-medium">Starbucks Georgia</div>
+                        <div className="text-purple-300 text-sm">Medium match - Quick surveys</div>
+                      </div>
+                    </div>
+                    <button className="px-4 py-2 bg-indigo-500/20 text-indigo-400 rounded-lg hover:bg-indigo-500/30 transition">
+                      Subscribe
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {activeTab === 'achievements' && (
             <div>
@@ -2117,7 +2280,6 @@ function App() {
       { id: 'analytics', label: 'Analytics', icon: BarChart3 },
       { id: 'insights', label: 'AI Insights', icon: Brain },
       { id: 'vouchers', label: 'Vouchers', icon: Gift },
-      { id: 'team', label: 'Team', icon: Users },
       { id: 'billing', label: 'Billing', icon: CreditCard }
     ];
 
@@ -2262,14 +2424,26 @@ function App() {
                 Create New Survey
               </button>
               <button
-                onClick={() => {
-                  setActiveTab('surveys');
-                  addNotification('AI Survey Builder activated!', 'info');
+                onClick={async () => {
+                  if (!aiEnabled) {
+                    addNotification('AI features are currently unavailable', 'warning');
+                    return;
+                  }
+                  setLoading('ai-builder', true);
+                  const aiSurvey = await generateAISurvey('General Customer Feedback', 'diverse customers');
+                  setLoading('ai-builder', false);
+                  if (aiSurvey) {
+                    setActiveTab('create');
+                    addNotification('AI survey generated! Customize it in the creation wizard.', 'success');
+                  }
                 }}
-                className="w-full px-6 py-4 bg-white/10 backdrop-blur-md text-white border-2 border-white/20 rounded-xl hover:bg-white/20 transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+                disabled={!aiEnabled || loadingStates['ai-builder']}
+                className={`w-full px-6 py-4 bg-white/10 backdrop-blur-md text-white border-2 border-white/20 rounded-xl hover:bg-white/20 transition-all transform hover:scale-105 flex items-center justify-center gap-2 ${
+                  loadingStates['ai-builder'] ? 'animate-pulse' : ''
+                }`}
               >
                 <Brain className="w-5 h-5" />
-                AI Survey Builder
+                {loadingStates['ai-builder'] ? 'Generating...' : 'AI Survey Builder'}
               </button>
               <button
                 onClick={() => {
@@ -4027,7 +4201,7 @@ function App() {
     if (!showFullAnalysis || !fullAIAnalysis) return null;
 
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
         <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
           <div className="p-8">
             <div className="flex justify-between items-center mb-8">
