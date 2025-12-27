@@ -2605,13 +2605,7 @@ function App() {
         <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
           {activeTab === 'dashboard' && renderDashboardOverview()}
           {activeTab === 'create' && renderSurveyCreation()}
-          {activeTab === 'analytics' && (
-            <div style={{ border: '2px solid red', padding: '20px', margin: '20px' }}>
-              <h1 style={{ color: 'white' }}>DEBUG: Analytics Tab Active</h1>
-              <p style={{ color: 'white' }}>Active tab: {activeTab}</p>
-              {renderAnalytics()}
-            </div>
-          )}
+          {activeTab === 'analytics' && renderAnalytics()}
           {activeTab === 'insights' && (
             <div className="text-center py-12">
               <Brain className="w-16 h-16 text-purple-300 mx-auto mb-4" />
