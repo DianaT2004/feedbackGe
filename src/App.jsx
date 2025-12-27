@@ -15,7 +15,8 @@ function App() {
   const [showSurveyDetails, setShowSurveyDetails] = useState(false);
   const [selectedSurveyDetails, setSelectedSurveyDetails] = useState(null);
   const [showSurveyChart, setShowSurveyChart] = useState(false);
-  const [tabsAnimated, setTabsAnimated] = useState(false); // Tab animation state
+  const [tabsAnimated, setTabsAnimated] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false); // Tab animation state
 
   // AI Capabilities & Features Configuration
   const aiCapabilities = {
@@ -1753,7 +1754,7 @@ function App() {
               </button>
               <button
                 onClick={() => setCurrentView('landing')}
-                className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center text-white font-bold hover:scale-110 transition"
+                className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center text-white font-bold hover:scale-110 transition text-lg"
               >
                 {userProfile.avatar}
               </button>
@@ -2081,6 +2082,12 @@ function App() {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [currentSurveyStep, setCurrentSurveyStep] = useState(1);
     const [tabsAnimated, setTabsAnimated] = useState(false);
+
+    // AI Survey Creation Features
+    const [voiceRecording, setVoiceRecording] = useState(false);
+    const [voiceTranscript, setVoiceTranscript] = useState('');
+    const [aiSuggestions, setAiSuggestions] = useState([]);
+    const [generatedText, setGeneratedText] = useState('');
 
     // Animate tabs on component mount
     useEffect(() => {
@@ -2464,14 +2471,153 @@ function App() {
               <div className="mt-8 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 backdrop-blur-xl border border-indigo-500/30 rounded-2xl p-4">
                 <h4 className="text-white font-bold mb-3 flex items-center gap-2">
                   <Brain className="w-5 h-5 text-indigo-400" />
-                  AI Suggestions
+                  AI Survey Assistant {userProfile.pro && <span className="text-xs px-2 py-1 bg-blue-500/30 rounded-full text-blue-400 ml-2">Pro</span>}
                 </h4>
-                <p className="text-purple-200 text-sm mb-4">
-                  Based on similar surveys, consider adding price satisfaction, recommendation likelihood, and competitor comparison questions.
-                </p>
-                <button className="w-full px-4 py-2 bg-indigo-500/20 text-indigo-400 rounded-lg hover:bg-indigo-500/30 transition text-sm font-medium">
-                  Add These Questions
-                </button>
+
+                {userProfile.pro ? (
+                  <div className="space-y-4">
+                    {/* Voice Notes */}
+                    <div className="bg-white/5 rounded-xl p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-white text-sm font-medium">Voice Notes</span>
+                        <button
+                          onClick={() => {
+                            setVoiceRecording(!voiceRecording);
+                            if (!voiceRecording) {
+                              addNotification('Voice recording started...', 'info');
+                            } else {
+                              addNotification('Voice recording stopped', 'success');
+                            }
+                          }}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
+                            voiceRecording
+                              ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                              : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                          }`}
+                        >
+                          {voiceRecording ? '⏹️ Stop' : '🎤 Record'}
+                        </button>
+                      </div>
+                      {voiceRecording && (
+                        <div className="flex items-center gap-2 text-purple-300 text-xs">
+                          <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                          Recording... Click stop when finished
+                        </div>
+                      )}
+                      {voiceTranscript && (
+                        <div className="mt-2 p-2 bg-purple-500/10 rounded text-purple-200 text-xs">
+                          {voiceTranscript}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* AI Question Suggestions */}
+                    <div className="bg-white/5 rounded-xl p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-white text-sm font-medium">AI Question Suggestions</span>
+                        <button
+                          onClick={async () => {
+                            if (!aiEnabled) {
+                              addNotification('AI features unavailable', 'warning');
+                              return;
+                            }
+                            const suggestions = await generateAISurvey(surveyData.title || 'General Survey', 'diverse audience');
+                            if (suggestions?.questions) {
+                              setAiSuggestions(suggestions.questions.slice(0, 3));
+                              addNotification('AI suggestions generated!', 'success');
+                            }
+                          }}
+                          disabled={!aiEnabled}
+                          className="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-lg hover:bg-indigo-500/30 transition text-xs font-medium disabled:opacity-50"
+                        >
+                          🤖 Generate
+                        </button>
+                      </div>
+                      {aiSuggestions.length > 0 && (
+                        <div className="space-y-2">
+                          {aiSuggestions.map((suggestion, i) => (
+                            <div key={i} className="flex items-center justify-between p-2 bg-indigo-500/10 rounded text-xs">
+                              <span className="text-indigo-200">{suggestion.question}</span>
+                              <button
+                                onClick={() => {
+                                  setSurveyData(prev => ({
+                                    ...prev,
+                                    questions: [...prev.questions, {
+                                      id: Date.now() + i,
+                                      question: suggestion.question,
+                                      type: suggestion.type || 'text',
+                                      options: suggestion.options || []
+                                    }]
+                                  }));
+                                  addNotification('Question added!', 'success');
+                                }}
+                                className="text-indigo-400 hover:text-indigo-300"
+                              >
+                                +
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* AI Text Generation */}
+                    <div className="bg-white/5 rounded-xl p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-white text-sm font-medium">AI Text Generation</span>
+                        <button
+                          onClick={async () => {
+                            if (!aiEnabled) {
+                              addNotification('AI features unavailable', 'warning');
+                              return;
+                            }
+                            const text = await analyzeSurveyData(
+                              { title: 'Text Generation Request' },
+                              [{ response: `Generate a compelling survey description for: ${surveyData.title || 'a customer satisfaction survey'}` }]
+                            );
+                            if (text) {
+                              setGeneratedText(text);
+                              addNotification('AI text generated!', 'success');
+                            }
+                          }}
+                          disabled={!aiEnabled}
+                          className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-lg hover:bg-purple-500/30 transition text-xs font-medium disabled:opacity-50"
+                        >
+                          ✍️ Generate
+                        </button>
+                      </div>
+                      {generatedText && (
+                        <div className="p-2 bg-purple-500/10 rounded text-purple-200 text-xs mb-2">
+                          {generatedText}
+                        </div>
+                      )}
+                      <button
+                        onClick={() => {
+                          if (generatedText) {
+                            setSurveyData(prev => ({ ...prev, description: generatedText }));
+                            addNotification('Description updated!', 'success');
+                          }
+                        }}
+                        disabled={!generatedText}
+                        className="w-full px-3 py-1 bg-purple-500/30 text-purple-400 rounded-lg hover:bg-purple-500/40 transition text-xs font-medium disabled:opacity-50"
+                      >
+                        Use This Text
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <p className="text-purple-200 text-sm mb-4">
+                      Based on similar surveys, consider adding price satisfaction, recommendation likelihood, and competitor comparison questions.
+                    </p>
+                    <button
+                      onClick={() => setCurrentView('upgrade')}
+                      className="w-full px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:shadow-lg transition text-sm font-medium"
+                    >
+                      Upgrade to Pro for AI Features
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -2864,12 +3010,12 @@ function App() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setCurrentView('upgrade')}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-medium hover:scale-105 transition cursor-pointer"
+                className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:shadow-lg transition transform hover:scale-105 cursor-pointer"
               >
-                Pro Plan
+                ⭐ Upgrade to Pro
               </button>
               <button
-                onClick={() => addNotification('Notifications panel coming soon!', 'info')}
+                onClick={() => setShowNotifications(!showNotifications)}
                 className="p-2 text-white hover:bg-white/10 rounded-lg transition relative"
               >
                 <Bell className="w-5 h-5" />
@@ -2921,66 +3067,14 @@ function App() {
               {/* View Full AI Analysis Button */}
               <div className="text-center mb-8">
                 <button
-                  onClick={async () => {
-                    if (!aiEnabled) {
-                      addNotification('AI features are currently unavailable', 'warning');
-                      return;
-                    }
-
-                    setLoading('full-analysis', true);
-                    try {
-                      // Get comprehensive AI analysis
-                      const analysis = await analyzeSurveyData(
-                        { title: 'Complete Business Analysis', description: 'Comprehensive survey insights' },
-                        recentSurveys.flatMap(s => Array(Math.min(s.responses, 10)).fill().map((_, i) => ({
-                          survey: s.name,
-                          response: `Sample response ${i + 1} for ${s.name}`,
-                          rating: Math.floor(Math.random() * 5) + 1,
-                          region: ['Tbilisi', 'Batumi', 'Kutaisi'][Math.floor(Math.random() * 3)]
-                        })))
-                      );
-
-                      if (analysis) {
-                        setFullAIAnalysis({
-                          summary: analysis,
-                          insights: aiInsights,
-                          recommendations: [
-                            'Improve delivery speed in Tbilisi region by 25%',
-                            'Focus customer service training on response time reduction',
-                            'Consider premium service tier pricing at ₾15-20/month',
-                            'Target customer retention campaigns in high-satisfaction areas',
-                            'Implement real-time feedback collection system'
-                          ],
-                          alerts: [
-                            'Customer satisfaction dropped 15% in Tbilisi district last week',
-                            'Delivery time mentioned negatively 23% more often this month',
-                            '78% of customers expressed willingness to pay more for premium service',
-                            'Regional performance variation: Tbilisi (4.2) vs Batumi (3.8) average rating'
-                          ],
-                          metrics: {
-                            totalResponses: 847,
-                            averageRating: 4.2,
-                            completionRate: '73%',
-                            topIssues: ['Delivery Time', 'Customer Service', 'Product Quality']
-                          },
-                          generatedAt: new Date().toISOString()
-                        });
-                        setShowFullAnalysis(true);
-                        addNotification('Full AI analysis generated successfully!', 'success');
-                      }
-                    } catch (error) {
-                      console.error('Full AI analysis failed:', error);
-                      addNotification('Failed to generate full AI analysis', 'error');
-                    }
-                    setLoading('full-analysis', false);
+                  onClick={() => {
+                    setActiveTab('analytics');
+                    addNotification('Redirecting to detailed analytics...', 'info');
                   }}
-                  disabled={!aiEnabled || loadingStates['full-analysis']}
-                  className={`px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-2xl hover:shadow-2xl transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto ${
-                    loadingStates['full-analysis'] ? 'animate-pulse' : ''
-                  }`}
+                  className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-2xl hover:shadow-2xl transition transform hover:scale-105 flex items-center gap-2 mx-auto"
                 >
                   <Brain className="w-6 h-6" />
-                  {loadingStates['full-analysis'] ? 'Generating Analysis...' : 'View Full AI Analysis'}
+                  View Full AI Analysis
                 </button>
               </div>
 
@@ -3471,7 +3565,7 @@ function App() {
                           setShowSurveyDetails(true);
                           addNotification(`Viewing detailed data for: ${survey.name}`, 'info');
                         }}
-                        className="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-lg text-xs hover:bg-indigo-500/30 transition"
+                        className="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-lg text-xs hover:bg-indigo-500/30 transition transform hover:scale-110 animate-pulse hover:animate-none"
                       >
                         👁️ View
                       </button>
@@ -3751,6 +3845,75 @@ function App() {
     );
   };
 
+  // Notifications Modal
+  const renderNotificationsModal = () => {
+    if (!showNotifications) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-end p-4">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl max-w-md w-full max-h-[80vh] overflow-y-auto">
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-white">Notifications</h2>
+              <button
+                onClick={() => setShowNotifications(false)}
+                className="p-1 text-purple-300 hover:text-white transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full mt-2"></div>
+                  <div>
+                    <h4 className="text-blue-400 font-medium mb-1">Survey Completed!</h4>
+                    <p className="text-blue-300 text-sm">Your "Customer Satisfaction Survey" has reached 100 responses.</p>
+                    <span className="text-xs text-blue-400/60">2 hours ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+                  <div>
+                    <h4 className="text-green-400 font-medium mb-1">Payment Processed</h4>
+                    <p className="text-green-300 text-sm">₾25.00 has been added to your account from survey rewards.</p>
+                    <span className="text-xs text-green-400/60">1 day ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2"></div>
+                  <div>
+                    <h4 className="text-yellow-400 font-medium mb-1">AI Insights Available</h4>
+                    <p className="text-yellow-300 text-sm">New AI analysis available for your recent surveys.</p>
+                    <span className="text-xs text-yellow-400/60">2 days ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-purple-400 rounded-full mt-2"></div>
+                  <div>
+                    <h4 className="text-purple-400 font-medium mb-1">New Voucher Available</h4>
+                    <p className="text-purple-300 text-sm">Check out the new voucher from Tbilisi Mall!</p>
+                    <span className="text-xs text-purple-400/60">3 days ago</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Main render logic with Notification System
   return (
     <>
@@ -3758,6 +3921,7 @@ function App() {
       {renderFullAIAnalysis()}
       {renderSurveyDetailsModal()}
       {renderSurveyChartModal()}
+      {renderNotificationsModal()}
       {selectedSurvey ? (
         <SurveyInterface />
       ) : (
