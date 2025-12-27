@@ -103,18 +103,72 @@ function App() {
     }
   };
 
-  const checkAIStatus = async () => {
+  const checkAIStatus = async (retryCount = 0) => {
+    const maxRetries = 3;
+
     try {
-      console.log('Checking AI status...');
-      const response = await fetch('http://localhost:3001/api/ai/status');
-      console.log('AI status response:', response.status);
+      console.log(`🔍 Checking AI status... (attempt ${retryCount + 1}/${maxRetries + 1})`);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+      const response = await fetch('http://localhost:3001/api/ai/status', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+      console.log('📡 AI status response:', response.status, response.statusText);
+
+      if (!response.ok) {
+        if (response.status === 404 && retryCount < maxRetries) {
+          console.log('🔄 Backend not ready, retrying in 2 seconds...');
+          setTimeout(() => checkAIStatus(retryCount + 1), 2000);
+          return false;
+        }
+        console.warn('❌ AI status endpoint returned error:', response.status);
+        setAiEnabled(false);
+        addNotification('AI backend unavailable. Some features may be limited.', 'warning');
+        return false;
+      }
+
       const data = await response.json();
-      console.log('AI status data:', data);
-      setAiEnabled(data.enabled);
-      return data.enabled;
+      console.log('✅ AI status data:', data);
+
+      const isEnabled = data.enabled === true;
+      console.log('🤖 Setting AI enabled to:', isEnabled);
+
+      if (isEnabled) {
+        addNotification('AI features are now active!', 'success');
+      } else {
+        addNotification('AI features temporarily offline. Basic features still available.', 'info');
+      }
+
+      setAiEnabled(isEnabled);
+      return isEnabled;
+
     } catch (error) {
-      console.warn('Could not check AI status:', error);
+      if (error.name === 'AbortError') {
+        console.warn('⏰ AI status check timed out');
+        if (retryCount < maxRetries) {
+          console.log('🔄 Retrying due to timeout...');
+          setTimeout(() => checkAIStatus(retryCount + 1), 1000);
+          return false;
+        }
+      } else {
+        console.warn('❌ Could not check AI status:', error.message);
+      }
+
+      console.log('🔄 Falling back to disabled state');
       setAiEnabled(false);
+
+      if (retryCount === 0) {
+        addNotification('Unable to connect to AI backend. Please ensure the server is running.', 'error');
+      }
+
       return false;
     }
   };
@@ -2124,7 +2178,10 @@ function App() {
                 Create New Survey
               </button>
               <button
-                onClick={() => setActiveTab('surveys')}
+                onClick={() => {
+                  setActiveTab('surveys');
+                  addNotification('AI Survey Builder activated!', 'info');
+                }}
                 className="w-full px-6 py-4 bg-white/10 backdrop-blur-md text-white border-2 border-white/20 rounded-xl hover:bg-white/20 transition-all transform hover:scale-105 flex items-center justify-center gap-2"
               >
                 <Brain className="w-5 h-5" />
@@ -2733,18 +2790,32 @@ function App() {
                   <h2 className="text-3xl font-bold text-white mb-2">AI Insights Dashboard</h2>
                   <p className="text-purple-300">Powered by Claude AI for intelligent analysis</p>
                 </div>
-                <div className={`px-4 py-2 rounded-xl text-sm font-medium ${
-                  aiEnabled
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
-                }`}>
-                  {aiEnabled ? 'AI Active' : 'AI Offline'}
+                <div className="flex items-center gap-3">
+                  <div className={`px-4 py-2 rounded-xl text-sm font-medium ${
+                    aiEnabled
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                  }`}>
+                    {aiEnabled ? 'AI Active' : 'AI Offline'}
+                  </div>
+                  <button
+                    onClick={() => checkAIStatus()}
+                    className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition text-sm flex items-center gap-1"
+                    title="Refresh AI Status"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh
+                  </button>
                 </div>
               </div>
 
               {/* AI Insights Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {aiInsights.map((insight, i) => (
+                {aiInsights.map((insight, i) => {
+                  const IconComponent = insight.icon;
+                  return (
                   <div key={i} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
                     <div className="flex items-start gap-4">
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
@@ -2752,7 +2823,7 @@ function App() {
                         insight.type === 'opportunity' ? 'bg-yellow-500/20' :
                         'bg-green-500/20'
                       }`}>
-                        <insight.icon className={`w-6 h-6 ${
+                        <IconComponent className={`w-6 h-6 ${
                           insight.type === 'critical' ? 'text-red-400' :
                           insight.type === 'opportunity' ? 'text-yellow-400' :
                           'text-green-400'
@@ -2780,7 +2851,8 @@ function App() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* AI Features Overview */}
@@ -2873,7 +2945,13 @@ function App() {
                     <Brain className="w-4 h-4" />
                     {loadingStates['ai-survey'] ? 'Generating...' : aiEnabled ? 'AI Generate Survey' : 'AI Offline'}
                   </button>
-                  <button className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-lg hover:shadow-lg transition">
+                  <button
+                    onClick={() => {
+                      setActiveTab('create');
+                      addNotification('Redirecting to survey creation wizard...', 'info');
+                    }}
+                    className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-lg hover:shadow-lg transition transform hover:scale-105"
+                  >
                     + Create Survey
                   </button>
                 </div>
