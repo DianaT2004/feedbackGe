@@ -896,7 +896,8 @@ function App() {
                 setUserType('company');
                 triggerAnimation('cta-company', 'animate-bounce');
                 await simulateAction('navigation');
-                setCurrentView('login');
+                addNotification('Welcome to Company Dashboard!', 'success');
+                setCurrentView('companyDash');
               }}
               className={`group px-8 py-4 bg-white/10 backdrop-blur-md text-white border-2 border-white/20 rounded-xl font-bold text-lg hover:bg-white/20 transition-all transform hover:scale-105 flex items-center justify-center gap-2 ${animations['cta-company'] || ''}`}
             >
