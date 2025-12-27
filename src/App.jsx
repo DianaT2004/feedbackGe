@@ -841,7 +841,7 @@ function App() {
           <p className={`text-xl text-purple-200 mb-12 max-w-2xl mx-auto transition-all duration-1000 delay-400 transform ${
             heroAnimation ? 'animate-in slide-in-from-bottom opacity-100' : 'opacity-0 translate-y-4'
           }`}>
-            Georgian companies and researchers need your insights. Complete engaging surveys, earn tokens, withdraw via BOG or TBC.
+            Georgian companies and researchers need your insights. Complete engaging surveys and earn tokens.
           </p>
 
           {/* CTA Buttons */}
@@ -1262,40 +1262,6 @@ function App() {
               )}
             </div>
 
-            {/* Social Login */}
-            <div className="border-t border-white/10 pt-6 mt-6">
-              <p className="text-purple-300 text-sm mb-4 text-center">
-                {isLogin ? 'Or continue with' : 'Sign up faster with'}
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => handleSocialLogin('tbc')}
-                  disabled={loadingStates['social-tbc']}
-                  className="py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-all transform hover:scale-105 disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {loadingStates['social-tbc'] ? (
-                    <LoadingSpinner size="sm" />
-                  ) : (
-                    <>
-                      <span className="text-xl">🔵</span> TBC ID
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => handleSocialLogin('bog')}
-                  disabled={loadingStates['social-bog']}
-                  className="py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-all transform hover:scale-105 disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {loadingStates['social-bog'] ? (
-                    <LoadingSpinner size="sm" />
-                  ) : (
-                    <>
-                      <span className="text-xl">🟠</span> BOG ID
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
 
             {/* Switch Auth Mode */}
             <div className="text-center mt-6">
@@ -1810,19 +1776,6 @@ function App() {
             </div>
           )}
 
-          {activeTab === 'analytics' && requirePremium('analytics') && (
-            <div className="text-center py-20">
-              <BarChart3 className="w-16 h-16 text-indigo-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-2">Advanced Analytics</h2>
-              <p className="text-purple-300 mb-6">Get detailed insights into your survey performance</p>
-              <button
-                onClick={() => setCurrentView('upgrade')}
-                className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl hover:shadow-xl transition-all transform hover:scale-105"
-              >
-                Upgrade to Premium
-              </button>
-            </div>
-          )}
 
           {activeTab === 'achievements' && (
             <div>
