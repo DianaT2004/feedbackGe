@@ -123,7 +123,7 @@ function App() {
             setUserProfile(prev => ({ ...prev, premium: true }));
             break;
           case 'survey_complete':
-            addNotification(`+₾${selectedSurvey.reward} earned! Keep up the great work!`, 'success');
+            addNotification(`+${selectedSurvey.reward} tokens earned! (≈ ₾${(selectedSurvey.reward * 0.05).toFixed(2)}) Keep up the great work!`, 'success');
             setUserProfile(prev => ({ ...prev, balance: prev.balance + selectedSurvey.reward }));
             setSurveyHistory(prev => [...prev, {
               id: selectedSurvey.id,
@@ -841,7 +841,7 @@ function App() {
           <p className={`text-xl text-purple-200 mb-12 max-w-2xl mx-auto transition-all duration-1000 delay-400 transform ${
             heroAnimation ? 'animate-in slide-in-from-bottom opacity-100' : 'opacity-0 translate-y-4'
           }`}>
-            Georgian companies and researchers need your insights. Complete engaging surveys and earn tokens.
+            Georgian companies and researchers need your insights. Complete engaging surveys and earn tokens automatically - like Honeygain!
           </p>
 
           {/* CTA Buttons */}
@@ -1559,7 +1559,8 @@ function App() {
                         <TokenLogo size={20} />
                         Your Total Balance
                       </p>
-                      <h2 className="text-6xl font-bold text-white mb-4">₾{userProfile.balance.toFixed(2)}</h2>
+                      <h2 className="text-6xl font-bold text-white mb-2">{Math.round(userProfile.balance / 0.05)} tokens</h2>
+                      <p className="text-purple-300 text-lg">≈ ₾{userProfile.balance.toFixed(2)} Lari</p>
                       <div className="flex items-center gap-3 text-white/90">
                         <TrendingUp className="w-5 h-5" />
                         <span className="font-medium text-lg">+₾7.80 this week</span>
@@ -1591,7 +1592,7 @@ function App() {
                         style={{ width: `${Math.min((userProfile.balance / 50) * 100, 100)}%` }}
                       ></div>
                     </div>
-                    <p className="text-white/90 font-medium">₾{(50 - userProfile.balance).toFixed(2)} more to unlock bank transfer</p>
+                    <p className="text-white/90 font-medium">{Math.round((50 - userProfile.balance) / 0.05)} more tokens to unlock bank transfer</p>
                   </div>
                 </div>
               </div>
@@ -2129,15 +2130,23 @@ function App() {
                 />
               </div>
               <div>
-                <label className="block text-white font-medium mb-2">Reward per completion (₾)</label>
+                <label className="block text-white font-medium mb-2">
+                  System Reward (tokens)
+                  <span className="text-purple-300 text-sm block">≈ ₾{surveyData.reward ? (surveyData.reward * 0.05).toFixed(2) : '0.00'} Lari</span>
+                </label>
                 <input
                   type="number"
                   value={surveyData.reward}
                   onChange={(e) => setSurveyData({...surveyData, reward: parseFloat(e.target.value)})}
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-purple-400 transition"
-                  min="0"
-                  step="0.10"
+                  min="0.1"
+                  max="5.0"
+                  step="0.1"
+                  placeholder="e.g. 2.5 tokens"
                 />
+                <p className="text-purple-300 text-sm mt-2">
+                  The system automatically rewards participants with tokens. You set the token amount, system converts to Lari.
+                </p>
               </div>
             </div>
             <div className="flex justify-end mt-8">
@@ -2596,7 +2605,13 @@ function App() {
         <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
           {activeTab === 'dashboard' && renderDashboardOverview()}
           {activeTab === 'create' && renderSurveyCreation()}
-          {activeTab === 'analytics' && renderAnalytics()}
+          {activeTab === 'analytics' && (
+            <div style={{ border: '2px solid red', padding: '20px', margin: '20px' }}>
+              <h1 style={{ color: 'white' }}>DEBUG: Analytics Tab Active</h1>
+              <p style={{ color: 'white' }}>Active tab: {activeTab}</p>
+              {renderAnalytics()}
+            </div>
+          )}
           {activeTab === 'insights' && (
             <div className="text-center py-12">
               <Brain className="w-16 h-16 text-purple-300 mx-auto mb-4" />
