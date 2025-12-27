@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, Legend } from 'recharts';
 import { TrendingUp, Award, Zap, Target, Users, Brain, ChevronRight, Star, MapPin, Clock, Coins, Gift, Trophy, Sparkles, ArrowRight, Eye, CheckCircle, AlertCircle, BarChart3, MessageSquare, Send, Crown, Diamond, Shield, Bell, Settings, LogOut, Plus, Minus, Heart, ThumbsUp, Share, Copy, Download, Upload, Camera, Mic, Video, Phone, Mail, Calendar, Bookmark, Filter, Search, Menu, X, Home, User, CreditCard, Wallet, Banknote, PiggyBank, TrendingDown, Activity, Layers, Layout, Grid, Maximize2, Minimize2, RotateCcw, Play, Pause, Volume2, VolumeX, Wifi, WifiOff, Battery, BatteryLow, Sun, Moon, Cloud, CloudRain, Zap as Lightning, Building2, FileText, HelpCircle, List, CheckSquare, Edit, DollarSign, Lightbulb } from 'lucide-react';
 
 function App() {
