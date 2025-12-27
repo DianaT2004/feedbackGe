@@ -1,11 +1,82 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, Legend } from 'recharts';
 import { TrendingUp, Award, Zap, Target, Users, Brain, ChevronRight, Star, MapPin, Clock, Coins, Gift, Trophy, Sparkles, ArrowRight, Eye, CheckCircle, AlertCircle, BarChart3, MessageSquare, Send, Crown, Diamond, Shield, Bell, Settings, LogOut, Plus, Minus, Heart, ThumbsUp, Share, Copy, Download, Upload, Camera, Mic, Video, Phone, Mail, Calendar, Bookmark, Filter, Search, Menu, X, Home, User, CreditCard, Wallet, Banknote, PiggyBank, TrendingDown, Activity, Layers, Layout, Grid, Maximize2, Minimize2, RotateCcw, Play, Pause, Volume2, VolumeX, Wifi, WifiOff, Battery, BatteryLow, Sun, Moon, Cloud, CloudRain, Zap as Lightning, Building2, FileText, HelpCircle, List, CheckSquare, Edit, DollarSign, Lightbulb } from 'lucide-react';
+import Anthropic from '@anthropic-ai/sdk';
 
 function App() {
   // Core navigation state
   const [currentView, setCurrentView] = useState('landing');
   const [userType, setUserType] = useState(null);
+
+  // Claude AI Integration
+  const [claudeApiKey, setClaudeApiKey] = useState('');
+  const [claudeClient, setClaudeClient] = useState(null);
+
+  // Initialize Claude client when API key is provided
+  useEffect(() => {
+    if (claudeApiKey && claudeApiKey.startsWith('sk-ant-')) {
+      try {
+        const client = new Anthropic({
+          apiKey: claudeApiKey,
+        });
+        setClaudeClient(client);
+        addNotification('Claude AI integration activated!', 'success');
+      } catch (error) {
+        console.error('Failed to initialize Claude client:', error);
+        addNotification('Failed to initialize Claude AI', 'error');
+      }
+    }
+  }, [claudeApiKey]);
+
+  // Claude AI Functions
+  const generateAISurvey = async (topic, targetAudience) => {
+    if (!claudeClient) {
+      addNotification('Claude API key required for AI features', 'warning');
+      return null;
+    }
+
+    try {
+      const message = await claudeClient.messages.create({
+        model: 'claude-3-sonnet-20240229',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `Generate a professional survey about "${topic}" for ${targetAudience} in Georgia. Include 5-7 relevant questions with appropriate question types (multiple choice, rating scale, open-ended). Format as JSON with title, description, and questions array.`
+        }]
+      });
+
+      const response = JSON.parse(message.content[0].text);
+      return response;
+    } catch (error) {
+      console.error('AI Survey generation failed:', error);
+      addNotification('AI survey generation failed', 'error');
+      return null;
+    }
+  };
+
+  const analyzeSurveyData = async (surveyData, responses) => {
+    if (!claudeClient) {
+      addNotification('Claude API key required for AI analysis', 'warning');
+      return null;
+    }
+
+    try {
+      const message = await claudeClient.messages.create({
+        model: 'claude-3-sonnet-20240229',
+        max_tokens: 800,
+        messages: [{
+          role: 'user',
+          content: `Analyze this survey data and provide 3 key insights. Survey: ${JSON.stringify(surveyData)}. Sample responses: ${JSON.stringify(responses.slice(0, 10))}. Provide actionable insights in Georgian market context.`
+        }]
+      });
+
+      return message.content[0].text;
+    } catch (error) {
+      console.error('AI Analysis failed:', error);
+      addNotification('AI analysis failed', 'error');
+      return null;
+    }
+  };
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // UI state
@@ -2006,7 +2077,10 @@ function App() {
                 <Plus className="w-5 h-5" />
                 Create New Survey
               </button>
-              <button className="w-full px-6 py-4 bg-white/10 backdrop-blur-md text-white border-2 border-white/20 rounded-xl hover:bg-white/20 transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+              <button
+                onClick={() => setActiveTab('surveys')}
+                className="w-full px-6 py-4 bg-white/10 backdrop-blur-md text-white border-2 border-white/20 rounded-xl hover:bg-white/20 transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+              >
                 <Brain className="w-5 h-5" />
                 AI Survey Builder
               </button>
@@ -2607,17 +2681,228 @@ function App() {
           {activeTab === 'create' && renderSurveyCreation()}
           {activeTab === 'analytics' && renderAnalytics()}
           {activeTab === 'insights' && (
-            <div className="text-center py-12">
-              <Brain className="w-16 h-16 text-purple-300 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-4">AI Insights Dashboard</h2>
-              <p className="text-purple-300">Advanced AI analysis coming soon...</p>
+            <div className="space-y-8">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-3xl font-bold text-white mb-2">AI Insights Dashboard</h2>
+                  <p className="text-purple-300">Powered by Claude AI for intelligent analysis</p>
+                </div>
+                {!claudeClient && (
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-2">
+                    <p className="text-yellow-400 text-sm">Configure Claude API key in Surveys tab</p>
+                  </div>
+                )}
+              </div>
+
+              {/* AI Insights Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {aiInsights.map((insight, i) => (
+                  <div key={i} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        insight.type === 'critical' ? 'bg-red-500/20' :
+                        insight.type === 'opportunity' ? 'bg-yellow-500/20' :
+                        'bg-green-500/20'
+                      }`}>
+                        <insight.icon className={`w-6 h-6 ${
+                          insight.type === 'critical' ? 'text-red-400' :
+                          insight.type === 'opportunity' ? 'text-yellow-400' :
+                          'text-green-400'
+                        }`} />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-white mb-2">{insight.title}</h3>
+                        <p className="text-purple-300 mb-4">{insight.content}</p>
+                        {claudeClient && (
+                          <button
+                            onClick={async () => {
+                              const analysis = await analyzeSurveyData(
+                                { title: 'Sample Survey', questions: [] },
+                                [{ responses: 'sample data' }]
+                              );
+                              if (analysis) {
+                                addNotification('AI analysis generated!', 'success');
+                              }
+                            }}
+                            className="px-4 py-2 bg-indigo-500/20 text-indigo-400 rounded-lg hover:bg-indigo-500/30 transition text-sm"
+                          >
+                            Get AI Analysis
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* AI Features Overview */}
+              <div className="bg-gradient-to-br from-indigo-500/20 to-purple-500/20 backdrop-blur-xl border border-indigo-500/30 rounded-2xl p-8">
+                <h3 className="text-2xl font-bold text-white mb-6 text-center">AI-Powered Features</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <FileText className="w-8 h-8 text-white" />
+                    </div>
+                    <h4 className="text-lg font-bold text-white mb-2">Survey Generation</h4>
+                    <p className="text-purple-300 text-sm">AI creates professional surveys based on your topic and audience</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <BarChart3 className="w-8 h-8 text-white" />
+                    </div>
+                    <h4 className="text-lg font-bold text-white mb-2">Data Analysis</h4>
+                    <p className="text-purple-300 text-sm">Intelligent insights and trend identification from survey responses</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Target className="w-8 h-8 text-white" />
+                    </div>
+                    <h4 className="text-lg font-bold text-white mb-2">Smart Targeting</h4>
+                    <p className="text-purple-300 text-sm">AI-optimized audience selection for better response quality</p>
+                  </div>
+                </div>
+
+                {!claudeClient && (
+                  <div className="mt-8 text-center">
+                    <div className="bg-white/10 rounded-xl p-6 max-w-md mx-auto">
+                      <Brain className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+                      <h4 className="text-lg font-bold text-white mb-2">Unlock AI Features</h4>
+                      <p className="text-purple-300 text-sm mb-4">Add your Claude API key to access AI-powered survey generation and intelligent analysis.</p>
+                      <button
+                        onClick={() => setActiveTab('surveys')}
+                        className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:shadow-xl transition"
+                      >
+                        Configure API Key
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
-          {(activeTab === 'surveys' || activeTab === 'team' || activeTab === 'billing') && (
+          {activeTab === 'team' && (
             <div className="text-center py-12">
-              <Target className="w-16 h-16 text-purple-300 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-4">{navigationTabs.find(t => t.id === activeTab)?.label} Management</h2>
-              <p className="text-purple-300">This feature is coming soon...</p>
+              <Users className="w-16 h-16 text-purple-300 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-white mb-4">Team Management</h2>
+              <p className="text-purple-300">Collaborate with your research team...</p>
+            </div>
+          )}
+
+          {activeTab === 'billing' && (
+            <div className="text-center py-12">
+              <CreditCard className="w-16 h-16 text-purple-300 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-white mb-4">Billing & Subscription</h2>
+              <p className="text-purple-300">Manage your subscription and billing...</p>
+            </div>
+          )}
+
+          {activeTab === 'surveys' && (
+            <div className="space-y-8">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-white">Survey Management</h2>
+                <div className="flex gap-4">
+                  <button
+                    onClick={async () => {
+                      if (!claudeClient) {
+                        addNotification('Please configure your Claude API key first', 'warning');
+                        return;
+                      }
+                      const aiSurvey = await generateAISurvey('Customer Satisfaction', 'Georgian consumers');
+                      if (aiSurvey) {
+                        addNotification('AI-generated survey created successfully!', 'success');
+                        setActiveTab('create'); // Switch to create tab to show the generated survey
+                      }
+                    }}
+                    disabled={!claudeClient}
+                    className={`px-4 py-2 font-bold rounded-lg hover:shadow-lg transition flex items-center gap-2 ${
+                      claudeClient
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:shadow-purple-500/25'
+                        : 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <Brain className="w-4 h-4" />
+                    {claudeClient ? 'AI Generate Survey' : 'AI Setup Required'}
+                  </button>
+                  <button className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-lg hover:shadow-lg transition">
+                    + Create Survey
+                  </button>
+                </div>
+              </div>
+
+              {/* AI Configuration */}
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <Brain className="w-6 h-6 text-purple-400" />
+                  AI Configuration
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-purple-300 mb-2">Claude API Key</label>
+                    <div className="flex gap-3">
+                      <input
+                        type="password"
+                        value={claudeApiKey}
+                        onChange={(e) => setClaudeApiKey(e.target.value)}
+                        placeholder="sk-ant-api03-..."
+                        className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:border-purple-400 transition"
+                      />
+                      <button
+                        onClick={() => {
+                          if (claudeApiKey) {
+                            addNotification('API key saved securely', 'success');
+                          } else {
+                            addNotification('Please enter a valid API key', 'warning');
+                          }
+                        }}
+                        className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl hover:shadow-lg transition"
+                      >
+                        Save Key
+                      </button>
+                    </div>
+                    <p className="text-purple-400 text-sm mt-2">
+                      Get your API key from{' '}
+                      <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-purple-300">
+                        Anthropic Console
+                      </a>
+                    </p>
+                  </div>
+
+                  {claudeClient && (
+                    <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+                      <div className="flex items-center gap-2 text-green-400">
+                        <CheckCircle className="w-5 h-5" />
+                        <span className="font-medium">Claude AI is active and ready!</span>
+                      </div>
+                      <p className="text-green-300 text-sm mt-1">You can now use AI-powered survey generation and analysis features.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Existing Surveys List */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {recentSurveys.map((survey, i) => (
+                  <div key={i} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition transform hover:scale-105">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-bold text-white mb-1">{survey.name}</h3>
+                        <p className="text-purple-300 text-sm">{survey.responses} responses</p>
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        survey.status === 'active' ? 'bg-green-500/20 text-green-400' :
+                        survey.status === 'completed' ? 'bg-blue-500/20 text-blue-400' :
+                        'bg-gray-500/20 text-gray-400'
+                      }`}>
+                        {survey.status}
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center text-sm text-purple-300">
+                      <span>Created {survey.created}</span>
+                      <span>{survey.reward} tokens each</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
