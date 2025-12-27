@@ -838,35 +838,6 @@ function App() {
             </span>
           </h1>
 
-          {/* Debug: Direct Access Buttons */}
-          <div className={`mb-4 transition-all duration-1000 delay-300 transform ${
-            heroAnimation ? 'animate-in slide-in-from-bottom opacity-100' : 'opacity-0 translate-y-4'
-          }`}>
-            <div className="flex gap-4 justify-center text-xs">
-              <button
-                onClick={() => {
-                  setUserType('user');
-                  setCurrentView('userDash');
-                  addNotification('Welcome to User Dashboard!', 'success');
-                }}
-                className="text-blue-400 hover:text-blue-300 underline hover:no-underline"
-              >
-                [Debug: User Dashboard]
-              </button>
-              <span className="text-purple-400">|</span>
-              <button
-                onClick={() => {
-                  setUserType('company');
-                  setCurrentView('companyDash');
-                  addNotification('Welcome to Company Dashboard!', 'success');
-                }}
-                className="text-purple-400 hover:text-purple-300 underline hover:no-underline"
-              >
-                [Debug: Company Dashboard]
-              </button>
-            </div>
-          </div>
-
           <p className={`text-xl text-purple-200 mb-12 max-w-2xl mx-auto transition-all duration-1000 delay-400 transform ${
             heroAnimation ? 'animate-in slide-in-from-bottom opacity-100' : 'opacity-0 translate-y-4'
           }`}>
@@ -896,8 +867,7 @@ function App() {
                 setUserType('company');
                 triggerAnimation('cta-company', 'animate-bounce');
                 await simulateAction('navigation');
-                addNotification('Welcome to Company Dashboard!', 'success');
-                setCurrentView('companyDash');
+                setCurrentView('login');
               }}
               className={`group px-8 py-4 bg-white/10 backdrop-blur-md text-white border-2 border-white/20 rounded-xl font-bold text-lg hover:bg-white/20 transition-all transform hover:scale-105 flex items-center justify-center gap-2 ${animations['cta-company'] || ''}`}
             >
@@ -1036,16 +1006,24 @@ function App() {
     };
 
     const handleLogin = async () => {
+      console.log('Login attempt:', { email: formData.email, userType });
+
       if (!formData.email || !formData.password) {
         addNotification('Please fill in all fields', 'warning');
         return;
       }
 
+      // Accept any email/password combination for demo
       setLoading('auth', true);
       await simulateAction('login', 1500);
       setLoading('auth', false);
       setIsLoggedIn(true);
-      setCurrentView(userType === 'user' ? 'userDash' : 'companyDash');
+
+      const targetView = userType === 'user' ? 'userDash' : 'companyDash';
+      console.log('Navigating to:', targetView, 'for userType:', userType);
+
+      addNotification(`Welcome to ${userType === 'user' ? 'User' : 'Company'} Dashboard!`, 'success');
+      setCurrentView(targetView);
     };
 
     const handleRegister = async () => {
@@ -1070,16 +1048,26 @@ function App() {
       setAuthStep('success');
       setTimeout(() => {
         setIsLoggedIn(true);
-        setCurrentView(userType === 'user' ? 'userDash' : 'companyDash');
+        const targetView = userType === 'user' ? 'userDash' : 'companyDash';
+        console.log('Registration complete, navigating to:', targetView, 'for userType:', userType);
+        addNotification(`Account created! Welcome to ${userType === 'user' ? 'User' : 'Company'} Dashboard!`, 'success');
+        setCurrentView(targetView);
       }, 2000);
     };
 
     const handleSocialLogin = async (provider) => {
+      console.log('Social login attempt:', { provider, userType });
+
       setLoading(`social-${provider}`, true);
       await simulateAction('social-login', 1200);
       setLoading(`social-${provider}`, false);
       setIsLoggedIn(true);
-      setCurrentView(userType === 'user' ? 'userDash' : 'companyDash');
+
+      const targetView = userType === 'user' ? 'userDash' : 'companyDash';
+      console.log('Social login navigating to:', targetView, 'for userType:', userType);
+
+      addNotification(`Welcome to ${userType === 'user' ? 'User' : 'Company'} Dashboard!`, 'success');
+      setCurrentView(targetView);
     };
 
     if (authStep === 'success') {
@@ -1851,6 +1839,8 @@ function App() {
   const CompanyDashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
 
+    console.log('CompanyDashboard rendering, activeTab:', activeTab);
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 relative">
         {/* Background Effects */}
@@ -1925,10 +1915,10 @@ function App() {
 
         {/* Dashboard Content */}
         <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
-          {/* Debug Info */}
-          <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-            <p className="text-yellow-300 text-sm">
-              🔬 <strong>Company Dashboard Active</strong> - Current Tab: <strong>{activeTab}</strong>
+          {/* Debug info */}
+          <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+            <p className="text-blue-300 text-sm">
+              🔬 <strong>Company Dashboard Loaded</strong> | Active Tab: <strong>{activeTab}</strong> | User Type: <strong>company</strong>
             </p>
           </div>
 
