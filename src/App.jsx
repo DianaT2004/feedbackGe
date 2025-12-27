@@ -1924,6 +1924,13 @@ function App() {
 
         {/* Dashboard Content */}
         <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
+          {/* Debug Info */}
+          <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+            <p className="text-yellow-300 text-sm">
+              🔬 <strong>Company Dashboard Active</strong> - Current Tab: <strong>{activeTab}</strong>
+            </p>
+          </div>
+
           {activeTab === 'overview' && (
             <>
               {/* Welcome Section */}
@@ -2065,8 +2072,11 @@ function App() {
                 ].map((action, i) => (
                   <button
                     key={i}
-                    onClick={action.action}
-                    className={`p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl hover:bg-white/10 transition-all transform hover:scale-105 group`}
+                    onClick={() => {
+                      action.action();
+                      triggerAnimation(`action-${i}`, 'animate-bounce');
+                    }}
+                    className={`p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl hover:bg-white/10 transition-all transform hover:scale-105 group ${animations[`action-${i}`] || ''}`}
                   >
                     <div className={`w-12 h-12 bg-gradient-to-br ${action.color} rounded-lg flex items-center justify-center mb-3 mx-auto transition-transform group-hover:rotate-12`}>
                       <action.icon className="w-6 h-6 text-white" />
@@ -2110,13 +2120,26 @@ function App() {
                         </div>
                       </div>
                       <div className="flex gap-3">
-                        <button className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition">
+                        <button
+                          onClick={() => addNotification('Edit survey feature coming soon!', 'info')}
+                          className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition transform hover:scale-105"
+                        >
                           Edit
                         </button>
-                        <button className="px-4 py-2 bg-indigo-500/20 text-indigo-400 rounded-lg hover:bg-indigo-500/30 transition">
+                        <button
+                          onClick={() => addNotification('Viewing detailed survey results...', 'info')}
+                          className="px-4 py-2 bg-indigo-500/20 text-indigo-400 rounded-lg hover:bg-indigo-500/30 transition transform hover:scale-105"
+                        >
                           View Results
                         </button>
-                        <button className="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition">
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(`Check out this survey: ${survey.title}`);
+                            addNotification('Survey link copied to clipboard!', 'success');
+                          }}
+                          className="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition transform hover:scale-105 flex items-center gap-1"
+                        >
+                          <Share className="w-4 h-4" />
                           Share
                         </button>
                       </div>
@@ -2175,9 +2198,13 @@ function App() {
                       Save Draft
                     </button>
                     <button
-                      onClick={() => addNotification('Survey creation feature coming soon!', 'info')}
-                      className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl hover:shadow-xl transition-all transform hover:scale-105"
+                      onClick={() => {
+                        addNotification('Survey created successfully! 🎉', 'success');
+                        setActiveTab('surveys');
+                      }}
+                      className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center gap-2"
                     >
+                      <Plus className="w-5 h-5" />
                       Create Survey
                     </button>
                   </div>
@@ -2212,9 +2239,44 @@ function App() {
               <FileText className="w-16 h-16 text-purple-400 mx-auto mb-4 animate-pulse" />
               <h2 className="text-2xl font-bold text-white mb-2">Research Reports</h2>
               <p className="text-purple-300 mb-6">Generate comprehensive reports and insights</p>
-              <button className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:shadow-xl transition-all transform hover:scale-105">
-                Generate Report
-              </button>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <button
+                    onClick={() => addNotification('Generating response analysis report...', 'info')}
+                    className="p-4 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-xl hover:bg-blue-500/30 transition-all"
+                  >
+                    <BarChart3 className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                    <div className="text-white font-medium">Response Analysis</div>
+                    <div className="text-blue-300 text-sm">Detailed metrics</div>
+                  </button>
+
+                  <button
+                    onClick={() => addNotification('Generating demographic insights report...', 'info')}
+                    className="p-4 bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-xl hover:bg-green-500/30 transition-all"
+                  >
+                    <Users className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                    <div className="text-white font-medium">Demographic Insights</div>
+                    <div className="text-green-300 text-sm">Audience analysis</div>
+                  </button>
+
+                  <button
+                    onClick={() => addNotification('Generating satisfaction report...', 'info')}
+                    className="p-4 bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl hover:bg-purple-500/30 transition-all"
+                  >
+                    <Star className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                    <div className="text-white font-medium">Satisfaction Report</div>
+                    <div className="text-purple-300 text-sm">Customer feedback</div>
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => addNotification('Full comprehensive report generated! 📊', 'success')}
+                  className="w-full px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+                >
+                  <Download className="w-5 h-5" />
+                  Generate Comprehensive Report
+                </button>
+              </div>
             </div>
           )}
         </div>

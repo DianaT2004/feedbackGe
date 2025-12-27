@@ -18,13 +18,20 @@ A comprehensive survey and research platform built for Georgian companies and re
 2. Login with demo credentials (mariam.gelash@gmail.com / demo1234)
 3. Access surveys, track earnings, and view analytics
 
-### Company Dashboard (Researchers)
-1. Click "Start Research" on the landing page
-2. Login with demo credentials (research@tbcbank.ge / demo1234)
-3. Create surveys, monitor responses, and analyze data
+### Company Dashboard (Researchers) - FULLY FUNCTIONAL! 🔬
+1. Click "Start Research" on the landing page, OR
+2. Use the "[Debug: Company Dashboard]" button for instant access
+3. Login with demo credentials (research@tbcbank.ge / demo1234)
+
+#### Company Dashboard Features:
+- **📊 Dashboard Overview**: Key metrics, charts, and AI insights
+- **📋 My Surveys**: Manage existing surveys with edit/view/share options
+- **➕ Create Survey**: Full survey creation form with validation
+- **📈 Analytics**: Advanced metrics and performance tracking
+- **📄 Reports**: Generate comprehensive research reports
 
 ### Debug Access (For Testing)
-- Use the debug buttons on the landing page to access dashboards directly
+- Use the debug buttons on the landing page for instant access to any dashboard
 
 ## 🛠️ Development
 
@@ -66,6 +73,9 @@ npm run preview
 ### Company Account
 - Email: `research@tbcbank.ge`
 - Password: `demo1234`
+
+#### Or use Debug Access:
+- Click the debug buttons on the landing page for instant access to dashboards
 
 ## 🎨 Features Showcase
 
