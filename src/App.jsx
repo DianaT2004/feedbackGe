@@ -2346,7 +2346,7 @@ function App() {
     );
 
     const renderAnalytics = () => (
-      <div className="space-y-8">
+        <div className="space-y-8">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
