@@ -19,8 +19,13 @@ A comprehensive survey and research platform built for Georgian companies and re
 3. Access surveys, track earnings, and view analytics
 
 ### Company Dashboard (Researchers) - FULLY FUNCTIONAL! 🔬
-1. Click "Start Research" on the landing page (direct access)
-2. Or use the "[Debug: Company Dashboard]" button for instant access
+1. Click "Start Research" on the landing page
+2. Complete login or registration on the auth page
+3. Access the full company research dashboard
+
+**Demo Credentials for Testing:**
+- Email: `research@tbcbank.ge`
+- Password: `demo1234`
 
 #### Company Dashboard Features:
 - **📊 Dashboard Overview**: Key metrics, charts, and AI insights
