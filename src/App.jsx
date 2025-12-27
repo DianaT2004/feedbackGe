@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { TrendingUp, Award, Zap, Target, Users, Brain, ChevronRight, Star, MapPin, Clock, Coins, Gift, Trophy, Sparkles, ArrowRight, Eye, CheckCircle, AlertCircle, BarChart3, MessageSquare, Send, Crown, Diamond, Shield, Bell, Settings, LogOut, Plus, Minus, Heart, ThumbsUp, Share, Copy, Download, Upload, Camera, Mic, Video, Phone, Mail, Calendar, Bookmark, Filter, Search, Menu, X, Home, User, CreditCard, Wallet, Banknote, PiggyBank, TrendingDown, Activity, Layers, Layout, Grid, Maximize2, Minimize2, RotateCcw, Play, Pause, Volume2, VolumeX, Wifi, WifiOff, Battery, BatteryLow, Sun, Moon, Cloud, CloudRain, Zap as Lightning } from 'lucide-react';
+import { TrendingUp, Award, Zap, Target, Users, Brain, ChevronRight, Star, MapPin, Clock, Coins, Gift, Trophy, Sparkles, ArrowRight, Eye, CheckCircle, AlertCircle, BarChart3, MessageSquare, Send, Crown, Diamond, Shield, Bell, Settings, LogOut, Plus, Minus, Heart, ThumbsUp, Share, Copy, Download, Upload, Camera, Mic, Video, Phone, Mail, Calendar, Bookmark, Filter, Search, Menu, X, Home, User, CreditCard, Wallet, Banknote, PiggyBank, TrendingDown, Activity, Layers, Layout, Grid, Maximize2, Minimize2, RotateCcw, Play, Pause, Volume2, VolumeX, Wifi, WifiOff, Battery, BatteryLow, Sun, Moon, Cloud, CloudRain, Zap as Lightning, Building2, FileText, HelpCircle, List, CheckSquare, Edit, DollarSign, Lightbulb } from 'lucide-react';
 
 function App() {
   // Core navigation state
@@ -1837,39 +1837,756 @@ function App() {
 
   // Enhanced Company Dashboard Component
   const CompanyDashboard = () => {
-    const [activeTab, setActiveTab] = useState('overview');
+    const [activeTab, setActiveTab] = useState('dashboard');
+    const [currentSurveyStep, setCurrentSurveyStep] = useState(1);
+    const [surveyData, setSurveyData] = useState({
+      title: '',
+      description: '',
+      category: 'Food & Beverage',
+      estimatedTime: 5,
+      reward: 0.50,
+      questions: [],
+      targeting: {
+        cities: ['Tbilisi'],
+        ageRange: { min: 18, max: 65 },
+        interests: ['Food & Dining', 'Shopping']
+      }
+    });
 
-    console.log('CompanyDashboard rendering, activeTab:', activeTab);
+    const navigationTabs = [
+      { id: 'dashboard', label: 'Dashboard', icon: Layout },
+      { id: 'surveys', label: 'Surveys', icon: Target },
+      { id: 'create', label: 'Create Survey', icon: Plus },
+      { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+      { id: 'insights', label: 'AI Insights', icon: Brain },
+      { id: 'team', label: 'Team', icon: Users },
+      { id: 'billing', label: 'Billing', icon: CreditCard }
+    ];
 
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 relative">
-        {/* Simple working dashboard */}
-        <div className="p-8">
-          <h1 className="text-4xl font-bold text-white mb-4">Researcher Dashboard</h1>
-          <p className="text-purple-300 text-lg mb-8">Welcome to your research dashboard!</p>
+    const keyMetrics = [
+      { label: 'Active Surveys', value: '3', change: '+1', icon: Target, color: 'from-blue-500 to-cyan-500' },
+      { label: 'Total Responses', value: '847', change: '+12%', icon: Users, color: 'from-green-500 to-emerald-500' },
+      { label: 'Avg Rating', value: '4.2/5', change: '+0.1', icon: Star, color: 'from-yellow-500 to-orange-500' },
+      { label: 'Response Rate', value: '68%', change: '+5%', icon: TrendingUp, color: 'from-purple-500 to-pink-500' }
+    ];
 
-          <div className="bg-white/10 rounded-lg p-6">
-            <h2 className="text-2xl font-bold text-white mb-4">Dashboard Status</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-blue-500/20 rounded p-4">
-                <p className="text-white font-medium">Active Tab</p>
-                <p className="text-blue-300">{activeTab}</p>
+    const recentSurveys = [
+      { name: 'Q4 Product Feedback Survey', status: 'active', responses: 847, created: '2024-01-15', reward: 0.50 },
+      { name: 'Customer Satisfaction Survey', status: 'completed', responses: 623, created: '2024-01-10', reward: 0.75 },
+      { name: 'Market Research Survey', status: 'active', responses: 234, created: '2024-01-08', reward: 0.30 },
+      { name: 'Employee Engagement Survey', status: 'draft', responses: 0, created: '2024-01-05', reward: 0.00 }
+    ];
+
+    const surveySteps = [
+      { id: 1, label: 'Basic Info', icon: FileText },
+      { id: 2, label: 'Questions', icon: HelpCircle },
+      { id: 3, label: 'Targeting', icon: Target },
+      { id: 4, label: 'Preview', icon: Eye },
+      { id: 5, label: 'Launch', icon: Send }
+    ];
+
+    const questionTypes = [
+      { type: 'multiple-choice', label: 'Multiple Choice', icon: List },
+      { type: 'rating', label: 'Rating Scale', icon: Star },
+      { type: 'text', label: 'Open Text', icon: MessageSquare },
+      { type: 'yes-no', label: 'Yes/No', icon: CheckSquare },
+      { type: 'image', label: 'Image Upload', icon: Camera },
+      { type: 'voice', label: 'Voice Response', icon: Mic, premium: true }
+    ];
+
+    const analyticsMetrics = [
+      { label: 'Total Responses', value: '847', change: '+12%', icon: Users },
+      { label: 'Avg Duration', value: '4m 32s', change: '-15s', icon: Clock },
+      { label: 'Completion Rate', value: '73%', change: '+5%', icon: CheckCircle },
+      { label: 'NPS Score', value: '+42', change: '+3', icon: TrendingUp },
+      { label: 'Cost per Response', value: '₾1.20', change: '-₾0.10', icon: DollarSign }
+    ];
+
+    const aiInsights = [
+      { type: 'critical', icon: AlertCircle, color: 'text-red-400', title: 'Critical Issues', content: '"Delivery time" mentioned in 23% of negative reviews' },
+      { type: 'opportunity', icon: TrendingUp, color: 'text-yellow-400', title: 'Opportunities', content: '78% willing to pay 15% more for premium service' },
+      { type: 'strength', icon: CheckCircle, color: 'text-green-400', title: 'Strengths', content: '"Friendly staff" mentioned 156x' },
+      { type: 'action', icon: Lightbulb, color: 'text-blue-400', title: 'Recommended Actions', content: 'Hire 2-3 more delivery drivers, Launch premium tier in Vake, Feature staff in marketing' }
+    ];
+
+    const renderDashboardOverview = () => (
+      <div className="space-y-8">
+        {/* Key Metrics */}
+        <div className="grid grid-cols-4 gap-6">
+          {keyMetrics.map((metric, i) => (
+            <div key={i} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6 hover:bg-white/10 transition transform hover:scale-105">
+              <div className="flex justify-between items-start mb-4">
+                <div className={`w-12 h-12 bg-gradient-to-br ${metric.color} rounded-lg flex items-center justify-center`}>
+                  <metric.icon className="w-6 h-6 text-white" />
+                </div>
+                <span className={`text-sm font-medium ${
+                  metric.change.startsWith('+') ? 'text-green-400' :
+                  metric.change.startsWith('-') ? 'text-red-400' : 'text-blue-400'
+                }`}>
+                  {metric.change}
+                </span>
               </div>
-              <div className="bg-green-500/20 rounded p-4">
-                <p className="text-white font-medium">User Type</p>
-                <p className="text-green-300">company</p>
+              <div className="text-3xl font-bold text-white mb-1">{metric.value}</div>
+              <div className="text-sm text-purple-300">{metric.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Middle Section */}
+        <div className="grid grid-cols-3 gap-8">
+          {/* Recent Surveys Table */}
+          <div className="col-span-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <Target className="w-6 h-6 text-indigo-400" />
+              Recent Surveys
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="pb-3 text-purple-300 font-medium">Survey Name</th>
+                    <th className="pb-3 text-purple-300 font-medium">Status</th>
+                    <th className="pb-3 text-purple-300 font-medium">Responses</th>
+                    <th className="pb-3 text-purple-300 font-medium">Created</th>
+                    <th className="pb-3 text-purple-300 font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="space-y-2">
+                  {recentSurveys.map((survey, i) => (
+                    <tr key={i} className="border-b border-white/5">
+                      <td className="py-4 text-white font-medium">{survey.name}</td>
+                      <td className="py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          survey.status === 'active' ? 'bg-green-500/20 text-green-400' :
+                          survey.status === 'completed' ? 'bg-blue-500/20 text-blue-400' :
+                          'bg-gray-500/20 text-gray-400'
+                        }`}>
+                          {survey.status}
+                        </span>
+                      </td>
+                      <td className="py-4 text-purple-300">{survey.responses}</td>
+                      <td className="py-4 text-purple-300">{survey.created}</td>
+                      <td className="py-4">
+                        <div className="flex gap-2">
+                          <button className="p-2 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition">
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button className="p-2 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition">
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button className="p-2 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition">
+                            <BarChart3 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <Zap className="w-6 h-6 text-indigo-400" />
+              Quick Actions
+            </h3>
+            <div className="space-y-4">
+              <button className="w-full px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-xl hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+                <Plus className="w-5 h-5" />
+                Create New Survey
+              </button>
+              <button className="w-full px-6 py-4 bg-white/10 backdrop-blur-md text-white border-2 border-white/20 rounded-xl hover:bg-white/20 transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+                <Brain className="w-5 h-5" />
+                AI Survey Builder
+              </button>
+              <button className="w-full px-6 py-4 bg-white/10 backdrop-blur-md text-white border-2 border-white/20 rounded-xl hover:bg-white/20 transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+                <Upload className="w-5 h-5" />
+                Import Questions
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* AI Insights Preview */}
+        <div className="bg-gradient-to-br from-indigo-500/20 to-purple-500/20 backdrop-blur-xl border border-indigo-500/30 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <Brain className="w-6 h-6 text-indigo-400" />
+            AI Insights Preview
+            <span className="ml-auto text-xs px-3 py-1 bg-purple-500/30 rounded-full">Premium</span>
+          </h3>
+          <div className="space-y-4">
+            <div className="flex items-start gap-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+              <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <TrendingDown className="w-5 h-5 text-red-400" />
+              </div>
+              <div>
+                <h4 className="text-white font-bold text-sm mb-1">⚡ Performance Alert</h4>
+                <p className="text-purple-200 text-sm">Your product rating dropped 0.3 points this week in Gldani district</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+              <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Lightbulb className="w-5 h-5 text-yellow-400" />
+              </div>
+              <div>
+                <h4 className="text-white font-bold text-sm mb-1">💡 AI Recommendation</h4>
+                <p className="text-purple-200 text-sm">Customers mention 'slow delivery' 15% more often</p>
+              </div>
+            </div>
+            <button className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:shadow-xl transition-all transform hover:scale-105">
+              View Full AI Analysis →
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+
+    const renderSurveyCreation = () => (
+      <div className="max-w-6xl mx-auto space-y-8">
+        {/* Progress Steps */}
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+          <div className="flex justify-between items-center">
+            {surveySteps.map((step, i) => (
+              <div key={step.id} className="flex items-center">
+                <div className={`flex items-center justify-center w-12 h-12 rounded-full ${
+                  step.id <= currentSurveyStep ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white' : 'bg-white/10 text-purple-300'
+                }`}>
+                  <step.icon className="w-5 h-5" />
+                </div>
+                <span className={`ml-3 font-medium ${
+                  step.id <= currentSurveyStep ? 'text-white' : 'text-purple-300'
+                }`}>
+                  {step.label}
+                </span>
+                {i < surveySteps.length - 1 && (
+                  <div className={`w-16 h-1 mx-4 ${
+                    step.id < currentSurveyStep ? 'bg-gradient-to-r from-indigo-500 to-purple-500' : 'bg-white/10'
+                  }`} />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Step Content */}
+        {currentSurveyStep === 1 && (
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+            <h2 className="text-2xl font-bold text-white mb-8">Step 1: Basic Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className="block text-white font-medium mb-2">Survey Title*</label>
+                <input
+                  type="text"
+                  value={surveyData.title}
+                  onChange={(e) => setSurveyData({...surveyData, title: e.target.value})}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:border-purple-400 transition"
+                  placeholder="Enter survey title..."
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-white font-medium mb-2">Description</label>
+                <textarea
+                  value={surveyData.description}
+                  onChange={(e) => setSurveyData({...surveyData, description: e.target.value})}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:border-purple-400 transition resize-none"
+                  rows="4"
+                  placeholder="Describe your survey..."
+                />
+              </div>
+              <div>
+                <label className="block text-white font-medium mb-2">Category</label>
+                <select
+                  value={surveyData.category}
+                  onChange={(e) => setSurveyData({...surveyData, category: e.target.value})}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-purple-400 transition"
+                >
+                  <option>Food & Beverage</option>
+                  <option>Technology</option>
+                  <option>Retail</option>
+                  <option>Healthcare</option>
+                  <option>Education</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-white font-medium mb-2">Estimated Time (minutes)</label>
+                <input
+                  type="number"
+                  value={surveyData.estimatedTime}
+                  onChange={(e) => setSurveyData({...surveyData, estimatedTime: parseInt(e.target.value)})}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-purple-400 transition"
+                  min="1"
+                  max="30"
+                />
+              </div>
+              <div>
+                <label className="block text-white font-medium mb-2">Reward per completion (₾)</label>
+                <input
+                  type="number"
+                  value={surveyData.reward}
+                  onChange={(e) => setSurveyData({...surveyData, reward: parseFloat(e.target.value)})}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-purple-400 transition"
+                  min="0"
+                  step="0.10"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end mt-8">
+              <button
+                onClick={() => setCurrentSurveyStep(2)}
+                className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-xl hover:shadow-xl transition-all transform hover:scale-105"
+              >
+                Next Step →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {currentSurveyStep === 2 && (
+          <div className="grid grid-cols-4 gap-8">
+            {/* Question Types Sidebar */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-white mb-6">Question Types</h3>
+              <div className="space-y-3">
+                {questionTypes.map((type, i) => (
+                  <div key={i} className={`p-3 rounded-xl cursor-pointer transition ${
+                    type.premium ? 'bg-yellow-500/10 border border-yellow-500/30' : 'bg-white/5 hover:bg-white/10'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <type.icon className="w-5 h-5 text-purple-300" />
+                      <span className="text-white font-medium">{type.label}</span>
+                      {type.premium && (
+                        <span className="ml-auto text-xs px-2 py-1 bg-yellow-500/30 rounded-full text-yellow-400">
+                          Premium
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* AI Assistant */}
+              <div className="mt-8 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 backdrop-blur-xl border border-indigo-500/30 rounded-2xl p-4">
+                <h4 className="text-white font-bold mb-3 flex items-center gap-2">
+                  <Brain className="w-5 h-5 text-indigo-400" />
+                  AI Suggestions
+                </h4>
+                <p className="text-purple-200 text-sm mb-4">
+                  Based on similar surveys, consider adding price satisfaction, recommendation likelihood, and competitor comparison questions.
+                </p>
+                <button className="w-full px-4 py-2 bg-indigo-500/20 text-indigo-400 rounded-lg hover:bg-indigo-500/30 transition text-sm font-medium">
+                  Add These Questions
+                </button>
+              </div>
+            </div>
+
+            {/* Question Builder */}
+            <div className="col-span-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-white">Survey Questions</h3>
+                <button className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-lg hover:shadow-lg transition">
+                  + Add Question
+                </button>
+              </div>
+
+              {surveyData.questions.length === 0 ? (
+                <div className="text-center py-12">
+                  <Target className="w-16 h-16 text-purple-300 mx-auto mb-4" />
+                  <h4 className="text-white font-bold text-lg mb-2">No questions yet</h4>
+                  <p className="text-purple-300 mb-6">Start building your survey by adding your first question</p>
+                  <button className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-xl hover:shadow-xl transition">
+                    Add First Question
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Question cards would go here */}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {currentSurveyStep === 3 && (
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+            <h2 className="text-2xl font-bold text-white mb-8">Step 3: Target Audience</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-lg font-bold text-white mb-4">Location Targeting</h3>
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3">
+                    <input type="checkbox" className="rounded" />
+                    <span className="text-purple-300">All Georgia</span>
+                  </label>
+                  <div>
+                    <label className="block text-purple-300 mb-2">Specific Cities:</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['Tbilisi', 'Batumi', 'Kutaisi', 'Rustavi', 'Gori', 'Zugdidi'].map(city => (
+                        <label key={city} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={surveyData.targeting.cities.includes(city)}
+                            onChange={(e) => {
+                              const newCities = e.target.checked
+                                ? [...surveyData.targeting.cities, city]
+                                : surveyData.targeting.cities.filter(c => c !== city);
+                              setSurveyData({
+                                ...surveyData,
+                                targeting: { ...surveyData.targeting, cities: newCities }
+                              });
+                            }}
+                            className="rounded"
+                          />
+                          <span className="text-white text-sm">{city}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-white mb-4">Demographics</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-purple-300 mb-2">Age Range</label>
+                    <div className="flex gap-4">
+                      <input
+                        type="number"
+                        value={surveyData.targeting.ageRange.min}
+                        onChange={(e) => setSurveyData({
+                          ...surveyData,
+                          targeting: {
+                            ...surveyData.targeting,
+                            ageRange: { ...surveyData.targeting.ageRange, min: parseInt(e.target.value) }
+                          }
+                        })}
+                        className="w-20 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-400"
+                        min="13"
+                        max="100"
+                      />
+                      <span className="text-purple-300">-</span>
+                      <input
+                        type="number"
+                        value={surveyData.targeting.ageRange.max}
+                        onChange={(e) => setSurveyData({
+                          ...surveyData,
+                          targeting: {
+                            ...surveyData.targeting,
+                            ageRange: { ...surveyData.targeting.ageRange, max: parseInt(e.target.value) }
+                          }
+                        })}
+                        className="w-20 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-purple-400"
+                        min="13"
+                        max="100"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-purple-300 mb-2">AI-Matched Interests</label>
+                    <div className="grid grid-cols-1 gap-2">
+                      {['Food & Dining', 'Technology', 'Travel', 'Shopping', 'Healthcare', 'Education'].map(interest => (
+                        <label key={interest} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={surveyData.targeting.interests.includes(interest)}
+                            onChange={(e) => {
+                              const newInterests = e.target.checked
+                                ? [...surveyData.targeting.interests, interest]
+                                : surveyData.targeting.interests.filter(i => i !== interest);
+                              setSurveyData({
+                                ...surveyData,
+                                targeting: { ...surveyData.targeting, interests: newInterests }
+                              });
+                            }}
+                            className="rounded"
+                          />
+                          <span className="text-white text-sm">{interest}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+              <p className="text-blue-300">
+                📊 <strong>Estimated Reach:</strong> ~2,400 users match your targeting criteria
+              </p>
+            </div>
+
+            <div className="flex justify-between mt-8">
+              <button
+                onClick={() => setCurrentSurveyStep(2)}
+                className="px-6 py-3 bg-white/10 text-white font-medium rounded-xl hover:bg-white/20 transition"
+              >
+                ← Previous Step
+              </button>
+              <button
+                onClick={() => setCurrentSurveyStep(4)}
+                className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-xl hover:shadow-xl transition-all transform hover:scale-105"
+              >
+                Next Step →
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+
+    const renderAnalytics = () => (
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Analytics Dashboard</h1>
+            <p className="text-purple-300">Q4 Product Feedback Survey • Jan 15 - Feb 15, 2024</p>
+          </div>
+          <div className="flex gap-4">
+            <button className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition">
+              Date Range ▼
+            </button>
+            <button className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-lg hover:shadow-lg transition">
+              Export
+            </button>
+            <button className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition">
+              Share
+            </button>
+          </div>
+        </div>
+
+        {/* Top Metrics */}
+        <div className="grid grid-cols-5 gap-6">
+          {analyticsMetrics.map((metric, i) => (
+            <div key={i} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6 text-center">
+              <metric.icon className="w-8 h-8 text-purple-300 mx-auto mb-3" />
+              <div className="text-2xl font-bold text-white mb-1">{metric.value}</div>
+              <div className="text-sm text-purple-300 mb-2">{metric.label}</div>
+              <span className={`text-xs font-medium ${
+                metric.change.startsWith('+') ? 'text-green-400' :
+                metric.change.startsWith('-') ? 'text-red-400' : 'text-blue-400'
+              }`}>
+                {metric.change}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-5 gap-8">
+          {/* Left Column */}
+          <div className="col-span-3 space-y-8">
+            {/* Response Over Time */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+              <h3 className="text-xl font-bold text-white mb-6">Response Over Time</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={companyAnalyticsData}>
+                  <defs>
+                    <linearGradient id="colorResponses" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
+                  <XAxis dataKey="month" stroke="#ffffff60" />
+                  <YAxis stroke="#ffffff60" />
+                  <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #ffffff20', borderRadius: '12px' }} />
+                  <Area type="monotone" dataKey="responses" stroke="#6366f1" fillOpacity={1} fill="url(#colorResponses)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Question Breakdown */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+              <h3 className="text-xl font-bold text-white mb-6">Question Breakdown</h3>
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-white font-medium mb-4">Q1: How satisfied are you with our service?</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-purple-300 text-sm">5 Stars</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 h-2 bg-white/10 rounded-full overflow-hidden">
+                          <div className="w-3/4 h-full bg-yellow-400 rounded-full"></div>
+                        </div>
+                        <span className="text-white text-sm w-12 text-right">45% (381)</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-purple-300 text-sm">4 Stars</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 h-2 bg-white/10 rounded-full overflow-hidden">
+                          <div className="w-1/2 h-full bg-yellow-400 rounded-full"></div>
+                        </div>
+                        <span className="text-white text-sm w-12 text-right">28% (237)</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-purple-300 text-sm">3 Stars</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 h-2 bg-white/10 rounded-full overflow-hidden">
+                          <div className="w-1/4 h-full bg-yellow-400 rounded-full"></div>
+                        </div>
+                        <span className="text-white text-sm w-12 text-right">15% (127)</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 mt-4">
+                    <button className="px-4 py-2 bg-indigo-500/20 text-indigo-400 rounded-lg hover:bg-indigo-500/30 transition text-sm font-medium">
+                      View Detailed Analysis
+                    </button>
+                    <button className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition text-sm">
+                      Filter by Demographics
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-8">
-            <button
-              onClick={() => setCurrentView('landing')}
-              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:shadow-xl transition-all transform hover:scale-105"
-            >
-              Back to Home
-            </button>
+          {/* Right Column */}
+          <div className="col-span-2 space-y-8">
+            {/* AI Insights Panel */}
+            <div className="bg-gradient-to-br from-indigo-500/20 to-purple-500/20 backdrop-blur-xl border border-indigo-500/30 rounded-2xl p-6">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <Brain className="w-6 h-6 text-indigo-400" />
+                AI Insights
+              </h3>
+              <div className="space-y-4">
+                {aiInsights.map((insight, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <insight.icon className={`w-5 h-5 mt-0.5 ${insight.color}`} />
+                    <div>
+                      <h4 className="text-white font-bold text-sm">{insight.title}</h4>
+                      <p className="text-purple-200 text-sm">{insight.content}</p>
+                    </div>
+                  </div>
+                ))}
+                <button className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:shadow-xl transition-all transform hover:scale-105">
+                  View Full AI Report →
+                </button>
+              </div>
+            </div>
+
+            {/* Sentiment Analysis */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+              <h3 className="text-xl font-bold text-white mb-6">Sentiment Analysis</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={sentimentData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {sentimentData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
+        </div>
+      </div>
+    );
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 relative">
+        {/* Background Effects */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          {particles.map(p => (
+            <div
+              key={p.id}
+              className="absolute rounded-full bg-indigo-400 opacity-5"
+              style={{
+                left: `${p.x}%`,
+                top: `${p.y}%`,
+                width: `${p.size * 2}px`,
+                height: `${p.size * 2}px`,
+                animation: `float ${p.duration}s infinite ease-in-out`
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Navigation */}
+        <nav className="relative z-10 bg-white/5 backdrop-blur-xl border-b border-white/10">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <Building2 className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xl font-bold text-white">🏢 COMPANY DASHBOARD</span>
+              </div>
+              <div className="h-6 w-px bg-white/20"></div>
+              <div className="flex gap-6">
+                {navigationTabs.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                      activeTab === tab.id
+                        ? 'bg-white/20 text-white'
+                        : 'text-purple-300 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <tab.icon className="w-4 h-4" />
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                Pro Plan
+              </div>
+              <button
+                onClick={() => addNotification('Notifications panel coming soon!', 'info')}
+                className="p-2 text-white hover:bg-white/10 rounded-lg transition relative"
+              >
+                <Bell className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+              </button>
+              <button
+                onClick={() => setCurrentView('landing')}
+                className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold hover:scale-110 transition"
+              >
+                C
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        {/* Main Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
+          {activeTab === 'dashboard' && renderDashboardOverview()}
+          {activeTab === 'create' && renderSurveyCreation()}
+          {activeTab === 'analytics' && renderAnalytics()}
+          {activeTab === 'insights' && (
+            <div className="text-center py-12">
+              <Brain className="w-16 h-16 text-purple-300 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-white mb-4">AI Insights Dashboard</h2>
+              <p className="text-purple-300">Advanced AI analysis coming soon...</p>
+            </div>
+          )}
+          {(activeTab === 'surveys' || activeTab === 'team' || activeTab === 'billing') && (
+            <div className="text-center py-12">
+              <Target className="w-16 h-16 text-purple-300 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-white mb-4">{navigationTabs.find(t => t.id === activeTab)?.label} Management</h2>
+              <p className="text-purple-300">This feature is coming soon...</p>
+            </div>
+          )}
         </div>
       </div>
     );
