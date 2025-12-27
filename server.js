@@ -168,7 +168,9 @@ app.post('/api/ai/analyze-survey', async (req, res) => {
   if (!anthropic) {
     console.log('Claude not available, returning basic analysis');
     return res.json({
-      analysis: 'AI analysis is currently unavailable. Basic analytics are still available in the Analytics tab.'
+      analysis: 'AI analysis is currently unavailable. Basic analytics are still available in the Analytics tab.',
+      insights: [],
+      recommendations: []
     });
   }
 
@@ -181,7 +183,7 @@ app.post('/api/ai/analyze-survey', async (req, res) => {
       max_tokens: 800,
       messages: [{
         role: 'user',
-        content: `Analyze this survey data and provide 3 key insights with actionable recommendations.
+        content: `Analyze this survey data and provide comprehensive insights with actionable recommendations.
 Survey Title: ${survey.title}
 Survey Description: ${survey.description}
 Number of Responses: ${responses.length}
@@ -189,25 +191,155 @@ Market: ${market || 'Georgia'}
 
 Sample responses: ${JSON.stringify(responses.slice(0, 5))}
 
-Provide insights in a clear, actionable format. Focus on:
-1. Key findings
-2. Trends or patterns
-3. Recommendations for improvement
-4. Market-specific insights
+Provide a detailed analysis including:
+1. Key findings and trends
+2. Sentiment analysis (positive/neutral/negative breakdown)
+3. Demographic insights if available
+4. Regional patterns for Georgia market
+5. Specific recommendations for improvement
+6. Potential business actions
 
-Format as clear, readable text.`
+Format as structured JSON with these keys: analysis, insights[], recommendations[], alerts[]`
       }]
     });
 
     console.log('Claude API analysis response received');
-    res.json({
-      analysis: message.content[0].text
-    });
+    const responseText = message.content[0].text;
+
+    try {
+      const parsedResponse = JSON.parse(responseText);
+      res.json(parsedResponse);
+    } catch (parseError) {
+      // Fallback to text response
+      res.json({
+        analysis: responseText,
+        insights: [],
+        recommendations: [],
+        alerts: []
+      });
+    }
   } catch (error) {
     console.error('AI Analysis failed:', error);
     res.status(500).json({
       error: 'AI analysis error',
-      analysis: 'AI analysis is currently unavailable. Basic analytics are still available in the Analytics tab.'
+      analysis: 'AI analysis is currently unavailable. Basic analytics are still available in the Analytics tab.',
+      insights: [],
+      recommendations: [],
+      alerts: []
+    });
+  }
+});
+
+// AI Insights endpoint
+app.post('/api/ai/insights', async (req, res) => {
+  console.log('AI Insights requested');
+
+  if (!anthropic) {
+    return res.json({
+      insights: [],
+      alerts: []
+    });
+  }
+
+  try {
+    const { surveyData, timeRange, market } = req.body;
+
+    const message = await anthropic.messages.create({
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 600,
+      messages: [{
+        role: 'user',
+        content: `Generate AI insights and alerts for this survey data.
+Market: ${market || 'Georgia'}
+Time Range: ${timeRange || 'Last 30 days'}
+
+Survey Performance Data: ${JSON.stringify(surveyData)}
+
+Generate insights about:
+1. Performance trends
+2. Regional differences
+3. Sentiment changes
+4. Key issues or opportunities
+
+Also generate alerts for:
+- Significant rating drops
+- Negative feedback spikes
+- Regional performance issues
+
+Format as JSON with insights[] and alerts[] arrays.`
+      }]
+    });
+
+    const responseText = message.content[0].text;
+    try {
+      const parsedResponse = JSON.parse(responseText);
+      res.json(parsedResponse);
+    } catch (parseError) {
+      res.json({
+        insights: [],
+        alerts: []
+      });
+    }
+  } catch (error) {
+    console.error('AI Insights failed:', error);
+    res.status(500).json({
+      insights: [],
+      alerts: []
+    });
+  }
+});
+
+// AI Recommendations endpoint
+app.post('/api/ai/recommendations', async (req, res) => {
+  console.log('AI Recommendations requested');
+
+  if (!anthropic) {
+    return res.json({
+      recommendations: []
+    });
+  }
+
+  try {
+    const { survey, responses, market, previousData } = req.body;
+
+    const message = await anthropic.messages.create({
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 700,
+      messages: [{
+        role: 'user',
+        content: `Generate actionable business recommendations based on this survey data.
+
+Survey: ${JSON.stringify(survey)}
+Responses: ${JSON.stringify(responses.slice(0, 10))}
+Market: ${market || 'Georgia'}
+Previous Data: ${JSON.stringify(previousData || {})}
+
+Provide specific, actionable recommendations such as:
+1. Service improvements
+2. Pricing adjustments
+3. Marketing strategies
+4. Operational changes
+5. Customer experience enhancements
+
+Focus on Georgia market context and make recommendations measurable and time-bound.
+
+Format as JSON array of recommendation objects with: title, description, priority, timeframe, expectedImpact`
+      }]
+    });
+
+    const responseText = message.content[0].text;
+    try {
+      const recommendations = JSON.parse(responseText);
+      res.json({ recommendations });
+    } catch (parseError) {
+      res.json({
+        recommendations: []
+      });
+    }
+  } catch (error) {
+    console.error('AI Recommendations failed:', error);
+    res.status(500).json({
+      recommendations: []
     });
   }
 });

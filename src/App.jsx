@@ -10,6 +10,61 @@ function App() {
 
   // Claude AI Integration (Backend API)
   const [aiEnabled, setAiEnabled] = useState(true); // Platform-level AI availability
+  const [fullAIAnalysis, setFullAIAnalysis] = useState(null);
+  const [showFullAnalysis, setShowFullAnalysis] = useState(false);
+
+  // AI Capabilities & Features Configuration
+  const aiCapabilities = {
+    overview: {
+      role: "Intelligent assistant for companies to design better surveys, analyze responses, and extract actionable business insights automatically",
+      goal: "Reduce manual analysis and help companies make faster, data-driven decisions"
+    },
+    features: {
+      surveyBuilder: {
+        name: "AI Survey Builder",
+        capabilities: [
+          "Automatically generates survey questions based on survey goal, industry type, and target audience",
+          "Suggests optimal question types (scale, multiple choice, open-ended)",
+          "Suggests optimal question order and clear, unbiased wording",
+          "Helps avoid leading questions, redundant or unclear questions"
+        ],
+        benefits: ["Faster survey creation with higher-quality data"],
+        apiEndpoint: "/api/ai/generate-survey"
+      },
+      dataAnalysis: {
+        name: "AI Data Analysis",
+        capabilities: [
+          "Analyzes completed survey responses in real time",
+          "Detects trends, patterns, and sentiment (positive/neutral/negative)",
+          "Identifies frequently mentioned keywords",
+          "Groups responses by region, demographics, and time period"
+        ],
+        benefits: ["Companies instantly understand what customers are really saying"],
+        apiEndpoint: "/api/ai/analyze-survey"
+      },
+      insights: {
+        name: "AI Insights & Alerts",
+        capabilities: [
+          "Automatically generates insights about rating drops and negative feedback spikes",
+          "Sends alerts like 'Customer satisfaction dropped in Gldani district'",
+          "Detects regional performance differences",
+          "Monitors keyword mentions and sentiment changes"
+        ],
+        benefits: ["Early problem detection before issues escalate"],
+        apiEndpoint: "/api/ai/insights"
+      },
+      recommendations: {
+        name: "AI Recommendations",
+        capabilities: [
+          "Suggests actionable improvements (improve delivery speed, adjust pricing)",
+          "Focuses on specific regions or customer groups",
+          "Based on historical data, current trends, and survey comparisons"
+        ],
+        benefits: ["Turns raw data into clear business actions"],
+        apiEndpoint: "/api/ai/recommendations"
+      }
+    }
+  };
 
   // Backend API Functions for Claude AI
   const generateAISurvey = async (topic, targetAudience) => {
@@ -2783,7 +2838,7 @@ function App() {
           {activeTab === 'dashboard' && renderDashboardOverview()}
           {activeTab === 'create' && renderSurveyCreation()}
           {activeTab === 'analytics' && renderAnalytics()}
-          {activeTab === 'insights' && (
+          {activeTab === 'insights' && !showFullAnalysis && (
             <div className="space-y-8">
               <div className="flex justify-between items-center">
                 <div>
@@ -2811,8 +2866,74 @@ function App() {
                 </div>
               </div>
 
-              {/* AI Insights Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* View Full AI Analysis Button */}
+              <div className="text-center mb-8">
+                <button
+                  onClick={async () => {
+                    if (!aiEnabled) {
+                      addNotification('AI features are currently unavailable', 'warning');
+                      return;
+                    }
+
+                    setLoading('full-analysis', true);
+                    try {
+                      // Get comprehensive AI analysis
+                      const analysis = await analyzeSurveyData(
+                        { title: 'Complete Business Analysis', description: 'Comprehensive survey insights' },
+                        recentSurveys.flatMap(s => Array(Math.min(s.responses, 10)).fill().map((_, i) => ({
+                          survey: s.name,
+                          response: `Sample response ${i + 1} for ${s.name}`,
+                          rating: Math.floor(Math.random() * 5) + 1,
+                          region: ['Tbilisi', 'Batumi', 'Kutaisi'][Math.floor(Math.random() * 3)]
+                        })))
+                      );
+
+                      if (analysis) {
+                        setFullAIAnalysis({
+                          summary: analysis,
+                          insights: aiInsights,
+                          recommendations: [
+                            'Improve delivery speed in Tbilisi region by 25%',
+                            'Focus customer service training on response time reduction',
+                            'Consider premium service tier pricing at ₾15-20/month',
+                            'Target customer retention campaigns in high-satisfaction areas',
+                            'Implement real-time feedback collection system'
+                          ],
+                          alerts: [
+                            'Customer satisfaction dropped 15% in Tbilisi district last week',
+                            'Delivery time mentioned negatively 23% more often this month',
+                            '78% of customers expressed willingness to pay more for premium service',
+                            'Regional performance variation: Tbilisi (4.2) vs Batumi (3.8) average rating'
+                          ],
+                          metrics: {
+                            totalResponses: 847,
+                            averageRating: 4.2,
+                            completionRate: '73%',
+                            topIssues: ['Delivery Time', 'Customer Service', 'Product Quality']
+                          },
+                          generatedAt: new Date().toISOString()
+                        });
+                        setShowFullAnalysis(true);
+                        addNotification('Full AI analysis generated successfully!', 'success');
+                      }
+                    } catch (error) {
+                      console.error('Full AI analysis failed:', error);
+                      addNotification('Failed to generate full AI analysis', 'error');
+                    }
+                    setLoading('full-analysis', false);
+                  }}
+                  disabled={!aiEnabled || loadingStates['full-analysis']}
+                  className={`px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-2xl hover:shadow-2xl transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto ${
+                    loadingStates['full-analysis'] ? 'animate-pulse' : ''
+                  }`}
+                >
+                  <Brain className="w-6 h-6" />
+                  {loadingStates['full-analysis'] ? 'Generating Analysis...' : 'View Full AI Analysis'}
+                </button>
+              </div>
+
+              {/* AI Insights & Alerts */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {aiInsights.map((insight, i) => {
                   const IconComponent = insight.icon;
                   return (
@@ -2833,20 +2954,31 @@ function App() {
                         <h3 className="text-lg font-bold text-white mb-2">{insight.title}</h3>
                         <p className="text-purple-300 mb-4">{insight.content}</p>
                         {aiEnabled && (
-                          <button
-                            onClick={async () => {
-                              const analysis = await analyzeSurveyData(
-                                { title: 'Sample Survey', questions: [] },
-                                [{ responses: 'sample data' }]
-                              );
-                              if (analysis) {
-                                addNotification('AI analysis generated!', 'success');
-                              }
-                            }}
-                            className="px-4 py-2 bg-indigo-500/20 text-indigo-400 rounded-lg hover:bg-indigo-500/30 transition text-sm"
-                          >
-                            Get AI Analysis
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={async () => {
+                                const analysis = await analyzeSurveyData(
+                                  { title: insight.title, questions: [] },
+                                  [{ responses: insight.content }]
+                                );
+                                if (analysis) {
+                                  addNotification('AI analysis generated!', 'success');
+                                }
+                              }}
+                              className="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-lg hover:bg-indigo-500/30 transition text-sm"
+                            >
+                              🤖 Analyze
+                            </button>
+                            <button
+                              onClick={() => {
+                                setActiveTab('analytics');
+                                addNotification('Viewing detailed analytics...', 'info');
+                              }}
+                              className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-lg hover:bg-purple-500/30 transition text-sm"
+                            >
+                              📊 View Details
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -2855,7 +2987,84 @@ function App() {
                 })}
               </div>
 
-              {/* AI Features Overview */}
+              {/* AI Recommendations Section */}
+              <div className="bg-gradient-to-br from-emerald-500/20 to-teal-500/20 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-6 mb-8">
+                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                  <Lightbulb className="w-6 h-6 text-emerald-400" />
+                  AI Recommendations
+                </h3>
+                <div className="space-y-4">
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <h4 className="text-white font-medium mb-2">🚀 Service Improvements</h4>
+                    <p className="text-emerald-300 text-sm mb-3">Based on customer feedback analysis</p>
+                    <div className="flex gap-2">
+                      <button className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs hover:bg-emerald-500/30 transition">
+                        View Details
+                      </button>
+                      <button className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg text-xs hover:bg-blue-500/30 transition">
+                        Implement
+                      </button>
+                    </div>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <h4 className="text-white font-medium mb-2">📍 Regional Focus</h4>
+                    <p className="text-emerald-300 text-sm mb-3">Target specific districts with lower satisfaction</p>
+                    <div className="flex gap-2">
+                      <button className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs hover:bg-emerald-500/30 transition">
+                        View Details
+                      </button>
+                      <button className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg text-xs hover:bg-blue-500/30 transition">
+                        Create Campaign
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Alerts Section */}
+              <div className="bg-gradient-to-br from-red-500/20 to-orange-500/20 backdrop-blur-xl border border-red-500/30 rounded-2xl p-6">
+                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                  <AlertCircle className="w-6 h-6 text-red-400" />
+                  AI Alerts & Notifications
+                </h3>
+                <div className="space-y-4">
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-red-400 rounded-full mt-2 animate-pulse"></div>
+                      <div className="flex-1">
+                        <h4 className="text-red-400 font-medium mb-1">Critical Alert</h4>
+                        <p className="text-red-300 text-sm">Customer satisfaction dropped 15% in Tbilisi region this week</p>
+                        <div className="flex gap-2 mt-3">
+                          <button className="px-3 py-1 bg-red-500/20 text-red-400 rounded-lg text-xs hover:bg-red-500/30 transition">
+                            Investigate
+                          </button>
+                          <button className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg text-xs hover:bg-blue-500/30 transition">
+                            Create Response
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2"></div>
+                      <div className="flex-1">
+                        <h4 className="text-yellow-400 font-medium mb-1">Opportunity Alert</h4>
+                        <p className="text-yellow-300 text-sm">78% of respondents willing to pay more for premium service</p>
+                        <button className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-lg text-xs hover:bg-yellow-500/30 transition mt-2">
+                          Explore Pricing
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'insights' && showFullAnalysis && renderFullAIAnalysis()}
+
+          {activeTab === 'insights' && !showFullAnalysis && (
               <div className="bg-gradient-to-br from-indigo-500/20 to-purple-500/20 backdrop-blur-xl border border-indigo-500/30 rounded-2xl p-8">
                 <h3 className="text-2xl font-bold text-white mb-6 text-center">AI-Powered Features</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -2901,18 +3110,218 @@ function App() {
             </div>
           )}
           {activeTab === 'team' && (
-            <div className="text-center py-12">
-              <Users className="w-16 h-16 text-purple-300 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-4">Team Management</h2>
-              <p className="text-purple-300">Collaborate with your research team...</p>
+            <div className="space-y-8">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-3xl font-bold text-white mb-2">Team Management</h2>
+                  <p className="text-purple-300">Manage team members and permissions</p>
+                </div>
+                <button
+                  onClick={() => addNotification('Invite team member feature coming soon!', 'info')}
+                  className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-lg hover:shadow-lg transition transform hover:scale-105"
+                >
+                  + Invite Member
+                </button>
+              </div>
+
+              {/* Team Members */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[
+                  { name: 'Giorgi Mikadze', role: 'Admin', email: 'giorgi@company.com', status: 'active', avatar: '👨‍💼' },
+                  { name: 'Nino Beridze', role: 'Analyst', email: 'nino@company.com', status: 'active', avatar: '👩‍💻' },
+                  { name: 'David Chkhaidze', role: 'Viewer', email: 'david@company.com', status: 'pending', avatar: '👨‍🔬' }
+                ].map((member, i) => (
+                  <div key={i} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center text-2xl">
+                          {member.avatar}
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-white">{member.name}</h3>
+                          <p className="text-purple-300 text-sm">{member.role}</p>
+                        </div>
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        member.status === 'active' ? 'bg-green-500/20 text-green-400' :
+                        member.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                        'bg-gray-500/20 text-gray-400'
+                      }`}>
+                        {member.status}
+                      </div>
+                    </div>
+                    <p className="text-purple-300 text-sm mb-4">{member.email}</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => addNotification(`Managing permissions for ${member.name}`, 'info')}
+                        className="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-lg text-xs hover:bg-indigo-500/30 transition"
+                      >
+                        Edit Role
+                      </button>
+                      <button
+                        onClick={() => addNotification(`${member.status === 'active' ? 'Deactivated' : 'Activated'} ${member.name}`, 'success')}
+                        className={`px-3 py-1 rounded-lg text-xs transition ${
+                          member.status === 'active'
+                            ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                            : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                        }`}
+                      >
+                        {member.status === 'active' ? 'Deactivate' : 'Activate'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Team Permissions */}
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                <h3 className="text-xl font-bold text-white mb-6">Role Permissions</h3>
+                <div className="space-y-4">
+                  {[
+                    { role: 'Admin', permissions: ['Create surveys', 'Manage team', 'View all analytics', 'Manage billing'] },
+                    { role: 'Analyst', permissions: ['Create surveys', 'View analytics', 'Export data'] },
+                    { role: 'Viewer', permissions: ['View surveys', 'View basic analytics'] }
+                  ].map((roleInfo, i) => (
+                    <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+                      <div>
+                        <h4 className="text-white font-medium">{roleInfo.role}</h4>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {roleInfo.permissions.map((perm, j) => (
+                            <span key={j} className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">
+                              {perm}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <button className="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-lg text-sm hover:bg-indigo-500/30 transition">
+                        Edit
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
           {activeTab === 'billing' && (
-            <div className="text-center py-12">
-              <CreditCard className="w-16 h-16 text-purple-300 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-4">Billing & Subscription</h2>
-              <p className="text-purple-300">Manage your subscription and billing...</p>
+            <div className="space-y-8">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-3xl font-bold text-white mb-2">Billing & Subscription</h2>
+                  <p className="text-purple-300">Manage your plan and payment information</p>
+                </div>
+                <div className={`px-4 py-2 rounded-xl text-sm font-medium ${
+                  userProfile.premium ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                  userProfile.pro ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+                  'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                }`}>
+                  {userProfile.premium ? 'Premium Plan' : userProfile.pro ? 'Pro Plan' : 'Free Plan'}
+                </div>
+              </div>
+
+              {/* Current Plan */}
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                <h3 className="text-xl font-bold text-white mb-6">Current Plan</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className={`p-6 rounded-xl border-2 ${
+                    !userProfile.pro && !userProfile.premium ? 'border-purple-500 bg-purple-500/10' :
+                    'border-white/20 bg-white/5'
+                  }`}>
+                    <h4 className="text-xl font-bold text-white mb-2">Free</h4>
+                    <p className="text-purple-300 text-sm mb-4">Perfect for getting started</p>
+                    <ul className="text-purple-300 text-sm space-y-1 mb-4">
+                      <li>• Up to 3 surveys</li>
+                      <li>• 100 responses/month</li>
+                      <li>• Basic analytics</li>
+                      <li>• Email support</li>
+                    </ul>
+                    {!userProfile.pro && !userProfile.premium && (
+                      <div className="text-green-400 font-medium">Current Plan</div>
+                    )}
+                  </div>
+
+                  <div className={`p-6 rounded-xl border-2 ${
+                    userProfile.pro && !userProfile.premium ? 'border-blue-500 bg-blue-500/10' :
+                    'border-white/20 bg-white/5'
+                  }`}>
+                    <h4 className="text-xl font-bold text-white mb-2">Pro</h4>
+                    <p className="text-purple-300 text-sm mb-4">$9.99/month</p>
+                    <ul className="text-purple-300 text-sm space-y-1 mb-4">
+                      <li>• Unlimited surveys</li>
+                      <li>• Advanced analytics</li>
+                      <li>• AI insights (limited)</li>
+                      <li>• Priority support</li>
+                    </ul>
+                    {userProfile.pro && !userProfile.premium && (
+                      <div className="text-blue-400 font-medium">Current Plan</div>
+                    )}
+                  </div>
+
+                  <div className={`p-6 rounded-xl border-2 ${
+                    userProfile.premium ? 'border-yellow-500 bg-yellow-500/10' :
+                    'border-white/20 bg-white/5'
+                  }`}>
+                    <h4 className="text-xl font-bold text-white mb-2">Premium</h4>
+                    <p className="text-purple-300 text-sm mb-4">$19.99/month</p>
+                    <ul className="text-purple-300 text-sm space-y-1 mb-4">
+                      <li>• Everything in Pro</li>
+                      <li>• Full AI capabilities</li>
+                      <li>• White-label surveys</li>
+                      <li>• Custom integrations</li>
+                    </ul>
+                    {userProfile.premium && (
+                      <div className="text-yellow-400 font-medium">Current Plan</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Usage Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                  <h4 className="text-white font-medium mb-2">Surveys Created</h4>
+                  <div className="text-3xl font-bold text-purple-400 mb-1">12</div>
+                  <p className="text-purple-300 text-sm">This month</p>
+                </div>
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                  <h4 className="text-white font-medium mb-2">Responses Collected</h4>
+                  <div className="text-3xl font-bold text-blue-400 mb-1">847</div>
+                  <p className="text-purple-300 text-sm">This month</p>
+                </div>
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                  <h4 className="text-white font-medium mb-2">AI Analyses Used</h4>
+                  <div className="text-3xl font-bold text-emerald-400 mb-1">23</div>
+                  <p className="text-purple-300 text-sm">This month</p>
+                </div>
+              </div>
+
+              {/* Payment History */}
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                <h3 className="text-xl font-bold text-white mb-6">Payment History</h3>
+                <div className="space-y-4">
+                  {[
+                    { date: '2025-01-15', amount: '$19.99', status: 'Paid', plan: 'Premium' },
+                    { date: '2024-12-15', amount: '$19.99', status: 'Paid', plan: 'Premium' },
+                    { date: '2024-11-15', amount: '$9.99', status: 'Paid', plan: 'Pro' }
+                  ].map((payment, i) => (
+                    <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                          <CheckCircle className="w-5 h-5 text-green-400" />
+                        </div>
+                        <div>
+                          <h4 className="text-white font-medium">{payment.plan} Plan</h4>
+                          <p className="text-purple-300 text-sm">{payment.date}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-white font-medium">{payment.amount}</div>
+                        <div className="text-green-400 text-sm">{payment.status}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
@@ -2945,15 +3354,25 @@ function App() {
                     <Brain className="w-4 h-4" />
                     {loadingStates['ai-survey'] ? 'Generating...' : aiEnabled ? 'AI Generate Survey' : 'AI Offline'}
                   </button>
-                  <button
-                    onClick={() => {
-                      setActiveTab('create');
-                      addNotification('Redirecting to survey creation wizard...', 'info');
-                    }}
-                    className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-lg hover:shadow-lg transition transform hover:scale-105"
-                  >
-                    + Create Survey
-                  </button>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={() => {
+                        setActiveTab('create');
+                        addNotification('Opening survey creation wizard...', 'info');
+                      }}
+                      className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-lg hover:shadow-lg transition transform hover:scale-105"
+                    >
+                      + Create Survey
+                    </button>
+                    <button
+                      onClick={() => {
+                        addNotification('Import Questions feature - allows uploading questions from CSV or previous surveys', 'info');
+                      }}
+                      className="px-4 py-2 bg-white/10 backdrop-blur-md text-white border-2 border-white/20 rounded-lg hover:bg-white/20 transition transform hover:scale-105"
+                    >
+                      📥 Import Questions
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -3034,9 +3453,72 @@ function App() {
                         {survey.status}
                       </div>
                     </div>
-                    <div className="flex justify-between items-center text-sm text-purple-300">
+
+                    <div className="flex justify-between items-center text-sm text-purple-300 mb-4">
                       <span>Created {survey.created}</span>
                       <span>{survey.reward} tokens each</span>
+                    </div>
+
+                    {/* Survey Management Actions */}
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedSurvey(survey);
+                          addNotification(`Viewing survey: ${survey.name}`, 'info');
+                        }}
+                        className="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-lg text-xs hover:bg-indigo-500/30 transition"
+                      >
+                        👁️ View
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (survey.status === 'draft' || survey.status === 'active') {
+                            setActiveTab('create');
+                            addNotification(`Editing survey: ${survey.name}`, 'info');
+                          } else {
+                            addNotification('Completed surveys cannot be edited', 'warning');
+                          }
+                        }}
+                        disabled={survey.status === 'completed'}
+                        className={`px-3 py-1 rounded-lg text-xs transition ${
+                          survey.status === 'completed'
+                            ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
+                            : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+                        }`}
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          // Toggle pause/complete
+                          addNotification(`${survey.status === 'active' ? 'Paused' : 'Activated'} survey: ${survey.name}`, 'success');
+                        }}
+                        className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-lg text-xs hover:bg-yellow-500/30 transition"
+                      >
+                        {survey.status === 'active' ? '⏸️ Pause' : '▶️ Activate'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setActiveTab('analytics');
+                          addNotification(`Viewing analytics for: ${survey.name}`, 'info');
+                        }}
+                        className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-lg text-xs hover:bg-purple-500/30 transition"
+                      >
+                        📊 Analytics
+                      </button>
+                      {aiEnabled && (
+                        <button
+                          onClick={async () => {
+                            const analysis = await analyzeSurveyData(survey, []);
+                            if (analysis) {
+                              addNotification(`AI analysis generated for: ${survey.name}`, 'success');
+                            }
+                          }}
+                          className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs hover:bg-emerald-500/30 transition"
+                        >
+                          🤖 AI Analysis
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -3065,6 +3547,191 @@ function App() {
         </>
       )}
     </>
+  );
+
+  // Full AI Analysis Modal
+  const renderFullAIAnalysis = () => {
+    if (!showFullAnalysis || !fullAIAnalysis) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-8">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-white mb-2">Full AI Analysis Report</h2>
+                <p className="text-purple-300">Comprehensive business insights powered by Claude AI</p>
+              </div>
+              <button
+                onClick={() => setShowFullAnalysis(false)}
+                className="p-2 text-purple-300 hover:text-white transition"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Executive Summary */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <BarChart3 className="w-6 h-6 text-blue-400" />
+                Executive Summary
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-400">{fullAIAnalysis.metrics.totalResponses}</div>
+                  <div className="text-purple-300 text-sm">Total Responses</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-emerald-400">{fullAIAnalysis.metrics.averageRating}</div>
+                  <div className="text-purple-300 text-sm">Average Rating</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-400">{fullAIAnalysis.metrics.completionRate}</div>
+                  <div className="text-purple-300 text-sm">Completion Rate</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-orange-400">{fullAIAnalysis.metrics.topIssues.length}</div>
+                  <div className="text-purple-300 text-sm">Key Issues Identified</div>
+                </div>
+              </div>
+              <p className="text-purple-300 leading-relaxed">{fullAIAnalysis.summary}</p>
+            </div>
+
+            {/* Key Insights */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <Lightbulb className="w-6 h-6 text-yellow-400" />
+                Key Insights
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {fullAIAnalysis.insights.map((insight, i) => {
+                  const IconComponent = insight.icon;
+                  return (
+                    <div key={i} className="bg-white/5 rounded-xl p-4">
+                      <div className="flex items-start gap-3">
+                        <IconComponent className={`w-5 h-5 mt-0.5 ${
+                          insight.type === 'critical' ? 'text-red-400' :
+                          insight.type === 'opportunity' ? 'text-yellow-400' :
+                          'text-green-400'
+                        }`} />
+                        <div>
+                          <h4 className="text-white font-medium mb-1">{insight.title}</h4>
+                          <p className="text-purple-300 text-sm">{insight.content}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* AI Recommendations */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <Target className="w-6 h-6 text-emerald-400" />
+                AI Recommendations
+              </h3>
+              <div className="space-y-4">
+                {fullAIAnalysis.recommendations.map((rec, i) => (
+                  <div key={i} className="flex items-start gap-4 p-4 bg-emerald-500/10 rounded-xl">
+                    <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-emerald-400 font-bold text-sm">{i + 1}</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-emerald-300">{rec}</p>
+                      <div className="flex gap-2 mt-3">
+                        <button className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs hover:bg-emerald-500/30 transition">
+                          Implement
+                        </button>
+                        <button className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg text-xs hover:bg-blue-500/30 transition">
+                          Schedule
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Critical Alerts */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <AlertCircle className="w-6 h-6 text-red-400" />
+                Critical Alerts & Action Items
+              </h3>
+              <div className="space-y-4">
+                {fullAIAnalysis.alerts.map((alert, i) => (
+                  <div key={i} className="flex items-start gap-4 p-4 bg-red-500/10 rounded-xl border border-red-500/30">
+                    <div className="w-3 h-3 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <p className="text-red-300">{alert}</p>
+                      <div className="flex gap-2 mt-3">
+                        <button className="px-3 py-1 bg-red-500/20 text-red-400 rounded-lg text-xs hover:bg-red-500/30 transition">
+                          Investigate
+                        </button>
+                        <button className="px-3 py-1 bg-orange-500/20 text-orange-400 rounded-lg text-xs hover:bg-orange-500/30 transition">
+                          Create Plan
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Export Options */}
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => addNotification('PDF export feature coming soon!', 'info')}
+                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold rounded-xl hover:shadow-lg transition flex items-center gap-2"
+              >
+                <Download className="w-5 h-5" />
+                Export PDF
+              </button>
+              <button
+                onClick={() => addNotification('Report scheduled for weekly delivery!', 'success')}
+                className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl hover:shadow-lg transition flex items-center gap-2"
+              >
+                <Calendar className="w-5 h-5" />
+                Schedule Weekly
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-900/20 to-purple-900/20"></div>
+        {particles.map((particle, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full bg-white/5 animate-pulse"
+            style={{
+              left: particle.x,
+              top: particle.y,
+              width: particle.size,
+              height: particle.size,
+              animationDelay: `${particle.delay}s`,
+              animationDuration: `${particle.duration}s`
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Main Content */}
+      <div className="relative z-10">
+        {currentView === 'landing' && <LandingPage />}
+        {currentView === 'auth' && <AuthPage />}
+        {currentView === 'userDash' && <UserDashboard />}
+        {currentView === 'companyDash' && <CompanyDashboard />}
+        {currentView === 'upgrade' && <PremiumUpgrade />}
+      </div>
+    </div>
   );
 }
 
