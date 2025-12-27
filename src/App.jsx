@@ -4022,29 +4022,6 @@ function App() {
     );
   };
 
-  // Main render logic with Notification System
-  return (
-    <>
-      <NotificationSystem />
-      {renderFullAIAnalysis()}
-      {renderSurveyDetailsModal()}
-      {renderSurveyChartModal()}
-      {renderNotificationsModal()}
-      {selectedSurvey ? (
-        <SurveyInterface />
-      ) : (
-        <>
-          {currentView === 'landing' && <LandingPage />}
-          {currentView === 'login' && <AuthPage />}
-          {currentView === 'register' && <AuthPage />}
-          {currentView === 'userDash' && <UserDashboard />}
-          {currentView === 'companyDash' && <CompanyDashboard />}
-          {currentView === 'upgrade' && <PremiumUpgrade />}
-        </>
-      )}
-    </>
-  );
-
   // Full AI Analysis Modal
   const renderFullAIAnalysis = () => {
     if (!showFullAnalysis || !fullAIAnalysis) return null;
@@ -4197,6 +4174,30 @@ function App() {
       </div>
     );
   };
+
+  // Main render logic with Notification System
+  return (
+    <>
+      <NotificationSystem />
+      {renderFullAIAnalysis()}
+      {renderSurveyDetailsModal()}
+      {renderSurveyChartModal()}
+      {renderNotificationsModal()}
+      {selectedSurvey ? (
+        <SurveyInterface />
+      ) : (
+        <>
+          {currentView === 'landing' && <LandingPage />}
+          {currentView === 'login' && <AuthPage />}
+          {currentView === 'register' && <AuthPage />}
+          {currentView === 'userDash' && <UserDashboard />}
+          {currentView === 'companyDash' && <CompanyDashboard />}
+          {currentView === 'upgrade' && <PremiumUpgrade />}
+        </>
+      )}
+    </>
+  );
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 relative overflow-hidden">
