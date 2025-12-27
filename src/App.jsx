@@ -3061,54 +3061,6 @@ function App() {
               </div>
             </div>
           )}
-
-          {activeTab === 'insights' && showFullAnalysis && renderFullAIAnalysis()}
-
-          {activeTab === 'insights' && !showFullAnalysis && (
-              <div className="bg-gradient-to-br from-indigo-500/20 to-purple-500/20 backdrop-blur-xl border border-indigo-500/30 rounded-2xl p-8">
-                <h3 className="text-2xl font-bold text-white mb-6 text-center">AI-Powered Features</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <FileText className="w-8 h-8 text-white" />
-                    </div>
-                    <h4 className="text-lg font-bold text-white mb-2">Survey Generation</h4>
-                    <p className="text-purple-300 text-sm">AI creates professional surveys based on your topic and audience</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <BarChart3 className="w-8 h-8 text-white" />
-                    </div>
-                    <h4 className="text-lg font-bold text-white mb-2">Data Analysis</h4>
-                    <p className="text-purple-300 text-sm">Intelligent insights and trend identification from survey responses</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Target className="w-8 h-8 text-white" />
-                    </div>
-                    <h4 className="text-lg font-bold text-white mb-2">Smart Targeting</h4>
-                    <p className="text-purple-300 text-sm">AI-optimized audience selection for better response quality</p>
-                  </div>
-                </div>
-
-                {!aiEnabled && (
-                  <div className="mt-8 text-center">
-                    <div className="bg-white/10 rounded-xl p-6 max-w-md mx-auto">
-                      <Brain className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-                      <h4 className="text-lg font-bold text-white mb-2">AI Features Temporarily Offline</h4>
-                      <p className="text-purple-300 text-sm mb-4">AI services are currently undergoing maintenance. Basic analytics remain available.</p>
-                      <button
-                        onClick={() => checkAIStatus()}
-                        className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:shadow-xl transition"
-                      >
-                        Check Status
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
           {activeTab === 'team' && (
             <div className="space-y-8">
               <div className="flex justify-between items-center">
